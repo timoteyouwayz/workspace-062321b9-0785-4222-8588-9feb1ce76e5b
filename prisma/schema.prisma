@@ -1,0 +1,126 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// User roles: STAFF, ACCOUNTANT, DIRECTOR, ADMIN
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      String   @default("STAFF") // STAFF, ACCOUNTANT, DIRECTOR, ADMIN
+  department String?
+  phone     String?
+  
+  // Google OAuth fields
+  googleId           String? @unique
+  googleEmail        String?
+  googlePicture      String?
+  googleAccessToken  String?
+  googleRefreshToken String?
+  googleTokenExpiry  DateTime?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  requisitions  Requisition[]
+  approvals     Requisition[]      @relation("CheckedBy")
+  finalApprovals Requisition[]     @relation("ApprovedBy")
+  receipts      Receipt[]
+  verifiedReceipts Receipt[]        @relation("VerifiedBy")
+}
+
+model Requisition {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  // Requisition Details
+  reason          String   // Transport, Supplies, Event, Training, Utilities, Maintenance, Other
+  description     String
+  eventDate       DateTime // Date of event happening
+  dateNeeded      DateTime // Date funds needed
+  participants    String?  // Participants if applicable
+  
+  // Transport specific fields
+  transportDistance String?
+  transportQuantity String?
+  
+  // Expense Items (stored as JSON)
+  expenseItems    String   // JSON array of {item, amount}
+  totalAmount     Float
+  
+  // Account Information
+  accountToCharge String?
+  
+  // Status: DRAFT, PENDING, CHECKED, APPROVED, DISBURSED, COMPLETED, REJECTED
+  status          String   @default("PENDING")
+  
+  // Approval workflow
+  checkedById     String?
+  checkedBy       User?    @relation("CheckedBy", fields: [checkedById], references: [id])
+  checkedAt       DateTime?
+  
+  approvedById    String?
+  approvedBy      User?    @relation("ApprovedBy", fields: [approvedById], references: [id])
+  approvedAt      DateTime?
+  
+  // Accountant disbursement
+  disbursedAt     DateTime?
+  disbursedBy     String?
+  
+  // Rejection reason
+  rejectionReason String?
+  
+  // Receipt tracking
+  receiptSubmitted Boolean @default(false)
+  receiptSubmittedAt DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  receipts        Receipt[]
+}
+
+model Receipt {
+  id              String   @id @default(cuid())
+  requisitionId   String
+  requisition     Requisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  
+  fileName        String
+  filePath        String
+  fileSize        Int
+  mimeType        String
+  
+  description     String?
+  
+  // Amount tracking for partial receipts
+  amount          Float    @default(0)
+  verified        Boolean  @default(false)
+  verifiedAt      DateTime?
+  verifiedById    String?
+  verifiedBy      User?    @relation("VerifiedBy", fields: [verifiedById], references: [id])
+  
+  uploadedAt      DateTime @default(now())
+}
+
+// Audit log for tracking changes
+model AuditLog {
+  id              String   @id @default(cuid())
+  action          String   // CREATE, UPDATE, APPROVE, REJECT, DISBURSE, RECEIPT_UPLOAD, RECEIPT_VERIFY
+  entityType      String   // REQUISITION, RECEIPT
+  entityId        String
+  userId          String
+  details         String?  // JSON with additional details
+  createdAt       DateTime @default(now())
+}
