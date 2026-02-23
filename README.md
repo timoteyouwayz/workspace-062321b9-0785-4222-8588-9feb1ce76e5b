@@ -17,7 +17,7 @@ This scaffold provides a robust foundation built with:
 - **🌈 Framer Motion** - Production-ready motion library for React
 - **🎨 Next Themes** - Perfect dark mode in 2 lines of code
 
-### 📋 Forms & Validation
+### 📋 Forms & Validations
 - **🎣 React Hook Form** - Performant forms with easy validation
 - **✅ Zod** - TypeScript-first schema validation
 
