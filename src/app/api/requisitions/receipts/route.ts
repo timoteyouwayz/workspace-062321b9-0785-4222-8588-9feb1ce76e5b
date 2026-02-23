@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
 import { writeFile, mkdir } from 'fs/promises';
 import path from 'path';
+import { uploadFileToDriveFromPath, appendRowToSheet } from '@/lib/google';
 
 // GET receipts for a requisition
 export async function GET(request: NextRequest) {
@@ -108,6 +109,49 @@ export async function POST(request: NextRequest) {
         verifiedById: ['ACCOUNTANT', 'ADMIN'].includes(session.role) ? session.id : null,
       },
     });
+
+    // Try to upload to Google Drive (service account) and append to spreadsheet if configured
+    try {
+      const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+      const spreadsheetId = process.env.GOOGLE_SPREADSHEET_ID || process.env.GOOGLE_SHEETS_ID || process.env.GOOGLE_SPREADSHEET;
+      const localPath = path.join(process.cwd(), 'uploads', 'receipts', fileName);
+
+      if (process.env.GOOGLE_SERVICE_ACCOUNT_KEY && folderId) {
+        const driveFile = await uploadFileToDriveFromPath(localPath, `Receipt_${file.name}`, file.type, [folderId]);
+
+        // update receipt with drive info
+        await db.receipt.update({
+          where: { id: receipt.id },
+          data: {
+            description: `${receipt.description || ''}\n\nGoogle Drive ID: ${driveFile.id}`.trim(),
+            driveFileId: driveFile.id || null,
+            driveLink: driveFile.webViewLink ? driveFile.webViewLink : driveFile.webContentLink ? driveFile.webContentLink : null,
+          },
+        });
+
+        // Append a row to spreadsheet if configured
+        if (spreadsheetId) {
+          try {
+            const user = await db.user.findUnique({ where: { id: session.id } });
+            await appendRowToSheet(spreadsheetId, [
+              new Date().toISOString(),
+              requisitionId,
+              requisition.reason || '',
+              user?.name || '',
+              user?.email || '',
+              file.name,
+              receiptAmount || 0,
+              ['ACCOUNTANT', 'ADMIN'].includes(session.role) ? 'VERIFIED' : 'PENDING',
+              `https://drive.google.com/file/d/${(driveFile && driveFile.id) || ''}/view`,
+            ]);
+          } catch (err) {
+            console.error('Append to sheet failed:', err);
+          }
+        }
+      }
+    } catch (err) {
+      console.error('Drive/service account upload error:', err);
+    }
 
     // Check if total receipts cover the full amount
     const allReceipts = await db.receipt.findMany({

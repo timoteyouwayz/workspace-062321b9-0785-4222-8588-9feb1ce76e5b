@@ -165,6 +165,10 @@ export default function NGOManagementSystem() {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showDriveSettings, setShowDriveSettings] = useState(false);
+  const [showAdminUsers, setShowAdminUsers] = useState(false);
+  const [newAdminForm, setNewAdminForm] = useState({ name: '', email: '', password: '', role: 'STAFF' });
+  const [adminUsers, setAdminUsers] = useState<User[]>([]);
+  const [adminLoading, setAdminLoading] = useState(false);
   const [selectedRequisition, setSelectedRequisition] = useState<Requisition | null>(null);
   
   // Reset password states
@@ -277,6 +281,59 @@ export default function NGOManagementSystem() {
       }
     } catch (error) {
       toast({ title: 'Error', description: 'Could not create account. Please try again.', variant: 'destructive' });
+    }
+  };
+
+  // Admin: create user via admin panel
+  const createAdminUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const res = await fetch('/api/admin/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newAdminForm),
+      });
+      const data = await res.json();
+      if (data.error) {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      } else {
+        toast({ title: 'User Created', description: `${data.user.name} (${data.user.email})` });
+        setNewAdminForm({ name: '', email: '', password: '', role: 'STAFF' });
+        // refresh list
+        fetchAdminUsers();
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Could not create user.', variant: 'destructive' });
+    }
+  };
+
+  const fetchAdminUsers = async () => {
+    setAdminLoading(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      const data = await res.json();
+      if (data.users) setAdminUsers(data.users);
+    } catch (err) {
+      console.error('Fetch admin users error:', err);
+      toast({ title: 'Error', description: 'Could not load users.', variant: 'destructive' });
+    } finally {
+      setAdminLoading(false);
+    }
+  };
+
+  const deleteAdminUser = async (id: string) => {
+    if (!confirm('Delete this user? This cannot be undone.')) return;
+    try {
+      const res = await fetch(`/api/admin/users?id=${id}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (data.error) {
+        toast({ title: 'Error', description: data.error, variant: 'destructive' });
+      } else {
+        toast({ title: 'Deleted', description: 'User removed.' });
+        fetchAdminUsers();
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: 'Could not delete user.', variant: 'destructive' });
     }
   };
 
@@ -940,6 +997,12 @@ export default function NGOManagementSystem() {
               <HelpCircle className="h-4 w-4 mr-1" />
               Help
             </Button>
+            {user.role === 'ADMIN' && (
+              <Button variant="ghost" size="sm" onClick={() => setShowAdminUsers(true)}>
+                <Key className="h-4 w-4 mr-1" />
+                Manage Users
+              </Button>
+            )}
             <div className="text-right">
               <p className="font-medium text-slate-800">{user.name}</p>
               <p className="text-sm text-slate-500">{user.role}</p>
@@ -1497,6 +1560,86 @@ export default function NGOManagementSystem() {
               </p>
             </div>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Admin: Manage Users Dialog */}
+      <Dialog open={showAdminUsers} onOpenChange={setShowAdminUsers}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              <div className="flex items-center gap-2">
+                <Key className="h-5 w-5" />
+                Manage Users
+              </div>
+            </DialogTitle>
+          </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <h3 className="font-medium">Existing Users</h3>
+                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                  {adminLoading ? (
+                    <p className="text-sm text-slate-500">Loading...</p>
+                  ) : (
+                    adminUsers.length === 0 ? (
+                      <p className="text-sm text-slate-500">No users found.</p>
+                    ) : (
+                      adminUsers.map((u) => (
+                        <div key={u.id} className="flex items-center justify-between p-2 border rounded">
+                          <div>
+                            <p className="font-medium">{u.name} <span className="text-xs text-slate-500">({u.role})</span></p>
+                            <p className="text-sm text-slate-500">{u.email}</p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Button variant="ghost" size="sm" onClick={() => { navigator.clipboard?.writeText(u.email); toast({ title: 'Copied', description: 'Email copied to clipboard.' }); }}>
+                              <Mail className="h-4 w-4" />
+                            </Button>
+                            <Button variant="destructive" size="sm" onClick={() => deleteAdminUser(u.id)}>
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </div>
+                      ))
+                    )
+                  )}
+                </div>
+              </div>
+
+              <hr />
+
+              <form onSubmit={createAdminUser} className="space-y-4">
+                <div>
+                  <Label>Name</Label>
+                  <Input value={newAdminForm.name} onChange={(e) => setNewAdminForm({ ...newAdminForm, name: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Email</Label>
+                  <Input type="email" value={newAdminForm.email} onChange={(e) => setNewAdminForm({ ...newAdminForm, email: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Password</Label>
+                  <Input type="password" value={newAdminForm.password} onChange={(e) => setNewAdminForm({ ...newAdminForm, password: e.target.value })} />
+                </div>
+                <div>
+                  <Label>Role</Label>
+                  <Select onValueChange={(v) => setNewAdminForm({ ...newAdminForm, role: v })} value={newAdminForm.role}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STAFF">Staff</SelectItem>
+                      <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
+                      <SelectItem value="DIRECTOR">Director</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <DialogFooter>
+                  <Button type="submit">Create User</Button>
+                  <Button variant="ghost" onClick={() => setShowAdminUsers(false)}>Close</Button>
+                </DialogFooter>
+              </form>
+            </div>
         </DialogContent>
       </Dialog>
 

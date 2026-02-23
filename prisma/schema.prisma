@@ -112,6 +112,8 @@ model Receipt {
   verifiedBy      User?    @relation("VerifiedBy", fields: [verifiedById], references: [id])
   
   uploadedAt      DateTime @default(now())
+  driveFileId     String?
+  driveLink       String?
 }
 
 // Audit log for tracking changes

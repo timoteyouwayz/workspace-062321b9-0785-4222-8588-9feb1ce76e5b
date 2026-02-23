@@ -117,6 +117,19 @@ bun prisma db push
 
 Click **"Sign in with Google"** in the app. After authentication, Drive uploads work automatically — no extra steps needed.
 
+### Service Account (recommended for server-side Sheet/Drive writes)
+
+If you prefer the app to write to a shared Drive or Sheets without per-user OAuth, create a Service Account in the Google Cloud Console, grant it access to the target shared drive and spreadsheet, then set the JSON key in your env:
+
+```env
+# Paste the entire JSON object as a single line value (escape newlines or use a secrets manager)
+GOOGLE_SERVICE_ACCOUNT_KEY='{ "type": "service_account", ... }'
+GOOGLE_DRIVE_FOLDER_ID=1y68aiLFsTGv-YvxnxidvE7vvtrtMmQzf
+GOOGLE_SPREADSHEET_ID=16f2yBXBQXhb6NObrCS428ZNnLrDFcjvcctjBoJlgfQg
+```
+
+After setting those, the server will automatically upload receipts to the shared folder and append rows to the spreadsheet.
+
 ---
 
 ## 8. Default accounts (from seed)
