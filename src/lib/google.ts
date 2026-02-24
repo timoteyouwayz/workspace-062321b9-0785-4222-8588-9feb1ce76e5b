@@ -68,3 +68,126 @@ export async function appendRowToSheet(spreadsheetId: string, values: Array<stri
 
   return res.data;
 }
+
+/**
+ * Add or update requisition in Google Sheets
+ */
+export async function syncRequisitionToSheet(spreadsheetId: string, requisition: any) {
+  const auth = getServiceAccountAuth();
+  if (!auth) throw new Error('Service account not configured (GOOGLE_SERVICE_ACCOUNT_KEY)');
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  try {
+    // Ensure header row exists
+    const headerCheck = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Sheet1!A1:M1',
+    } as any);
+
+    if (!headerCheck.data.values || headerCheck.data.values.length === 0) {
+      // Add headers
+      const headers = [
+        'ID',
+        'User',
+        'Email',
+        'Department',
+        'Reason',
+        'Description',
+        'Total Amount',
+        'Status',
+        'Date Needed',
+        'Created At',
+        'Updated At',
+        'Checked By',
+        'Approved By',
+      ];
+      await sheets.spreadsheets.values.update({
+        spreadsheetId,
+        range: 'Sheet1!A1:M1',
+        valueInputOption: 'USER_ENTERED',
+        requestBody: {
+          values: [headers],
+        },
+      } as any);
+    }
+
+    // Append the requisition row
+    const row = [
+      requisition.id,
+      requisition.user?.name || 'Unknown',
+      requisition.user?.email || 'Unknown',
+      requisition.user?.department || '',
+      requisition.reason,
+      requisition.description,
+      requisition.totalAmount,
+      requisition.status,
+      new Date(requisition.dateNeeded).toLocaleDateString(),
+      new Date(requisition.createdAt).toLocaleString(),
+      new Date(requisition.updatedAt).toLocaleString(),
+      requisition.checkedBy?.name || '',
+      requisition.approvedBy?.name || '',
+    ];
+
+    const appendRes = await sheets.spreadsheets.values.append({
+      spreadsheetId,
+      range: 'Sheet1',
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [row],
+      },
+    } as any);
+
+    return appendRes.data;
+  } catch (error) {
+    console.error('Error syncing requisition to sheet:', error);
+    throw error;
+  }
+}
+
+/**
+ * Update requisition status in Google Sheets (find and update the row)
+ */
+export async function updateRequisitionInSheet(spreadsheetId: string, requisitionId: string, status: string) {
+  const auth = getServiceAccountAuth();
+  if (!auth) throw new Error('Service account not configured (GOOGLE_SERVICE_ACCOUNT_KEY)');
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  try {
+    // Get all data to find the requisition
+    const allData = await sheets.spreadsheets.values.get({
+      spreadsheetId,
+      range: 'Sheet1',
+    } as any);
+
+    if (!allData.data.values) return;
+
+    // Find row with matching ID
+    const rowIndex = allData.data.values.findIndex((row: any) => row[0] === requisitionId);
+    if (rowIndex === -1) return; // Not found
+
+    // Update the status in column H (index 7)
+    const cellRange = `Sheet1!H${rowIndex + 1}`;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: cellRange,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[status]],
+      },
+    } as any);
+
+    // Also update the "Updated At" field in column K (index 10)
+    const updatedAtRange = `Sheet1!K${rowIndex + 1}`;
+    await sheets.spreadsheets.values.update({
+      spreadsheetId,
+      range: updatedAtRange,
+      valueInputOption: 'USER_ENTERED',
+      requestBody: {
+        values: [[new Date().toLocaleString()]],
+      },
+    } as any);
+  } catch (error) {
+    console.error('Error updating requisition in sheet:', error);
+    throw error;
+  }
+}

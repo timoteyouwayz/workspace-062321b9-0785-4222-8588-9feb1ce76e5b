@@ -5,8 +5,11 @@ generator client {
   provider = "prisma-client-js"
 }
 
+// Database configuration
+// For development: SQLite (file:./dev.db)
+// For production: PostgreSQL (postgresql://user:password@host:port/dbname)
 datasource db {
-  provider = "sqlite"
+  provider = env("DATABASE_PROVIDER")
   url      = env("DATABASE_URL")
 }
 

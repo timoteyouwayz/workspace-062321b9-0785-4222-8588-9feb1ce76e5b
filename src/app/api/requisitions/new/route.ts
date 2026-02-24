@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { syncRequisitionToSheet } from '@/lib/google';
 
 // POST create new requisition
 export async function POST(request: NextRequest) {
@@ -32,20 +33,23 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Check if user has pending requisitions that need receipts
+    // Check if user has pending requisitions that need receipts verified
     const pendingReceiptRequisitions = await db.requisition.findMany({
       where: {
         userId: session.id,
         status: 'DISBURSED',
-        receiptSubmitted: false,
-        eventDate: { lt: new Date() },
+        receipts: {
+          none: {
+            verified: true,
+          },
+        },
       },
     });
 
     if (pendingReceiptRequisitions.length > 0) {
       return NextResponse.json(
         {
-          error: 'You have pending requisitions that require receipt submission before creating a new one.',
+          error: 'You have pending requisitions waiting for receipt verification. Please upload receipts and wait for admin approval before creating a new requisition.',
           pendingRequisitions: pendingReceiptRequisitions.map(r => ({
             id: r.id,
             reason: r.reason,
@@ -77,6 +81,16 @@ export async function POST(request: NextRequest) {
         },
       },
     });
+
+    // Sync to Google Sheets if configured
+    if (process.env.GOOGLE_SHEETS_ID) {
+      try {
+        await syncRequisitionToSheet(process.env.GOOGLE_SHEETS_ID, requisition);
+      } catch (error) {
+        console.error('Failed to sync requisition to Google Sheets:', error);
+        // Don't fail the request if sheet sync fails
+      }
+    }
 
     return NextResponse.json({ requisition });
   } catch (error) {

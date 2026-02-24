@@ -1,5 +1,9 @@
 # 🚀 Setup Guide — Get Running in VSCode with Google Drive
 
+## Database Setup
+
+> **For production deployments**, see **[DATABASE_SETUP.md](DATABASE_SETUP.md)** for PostgreSQL, MySQL, and backup configuration.
+
 ## 1. Prerequisites
 
 | Tool | Install |

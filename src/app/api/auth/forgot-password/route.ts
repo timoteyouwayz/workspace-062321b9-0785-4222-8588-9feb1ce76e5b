@@ -1,9 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { randomBytes } from 'crypto';
+import { sendPasswordResetEmail } from '@/lib/email';
 
-// Simple in-memory token store (in production, use database)
+// In-memory token store (for single-server deployments; use Redis for multi-server)
 const resetTokens = new Map<string, { email: string; expires: number }>();
+
+// Cleanup old tokens periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [token, data] of resetTokens.entries()) {
+    if (data.expires < now) {
+      resetTokens.delete(token);
+    }
+  }
+}, 60000); // Every minute
 
 export async function POST(request: NextRequest) {
   try {
@@ -18,7 +29,7 @@ export async function POST(request: NextRequest) {
       where: { email: email.toLowerCase() },
     });
 
-    // Don't reveal if user exists or not
+    // Don't reveal if user exists or not (security)
     if (!user) {
       return NextResponse.json({ 
         success: true, 
@@ -32,22 +43,55 @@ export async function POST(request: NextRequest) {
 
     resetTokens.set(token, { email: user.email, expires });
 
-    // In production, send email with reset link
-    // For demo, we'll return the token
-    const resetUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}?reset=${token}`;
+    // Send email
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+    const emailSent = await sendPasswordResetEmail(user.email, user.name, token, appUrl);
 
-    console.log(`Password reset for ${email}: ${resetUrl}`);
+    // For demo/testing: Return reset link in response if email fails
+    if (!emailSent && process.env.NODE_ENV === 'development') {
+      const resetUrl = `${appUrl}/reset-password?token=${token}`;
+      return NextResponse.json({ 
+        success: true, 
+        message: 'Reset instructions sent!',
+        demoResetUrl: resetUrl, // Only shown in dev mode
+        demoToken: token,
+      });
+    }
 
     return NextResponse.json({ 
       success: true, 
-      message: 'Reset instructions sent! Check your email.',
-      // For demo purposes, show the reset link
-      demoResetUrl: resetUrl,
-      demoToken: token,
+      message: 'If an account exists with this email, you will receive reset instructions.' 
     });
   } catch (error) {
     console.error('Forgot password error:', error);
     return NextResponse.json({ error: 'Something went wrong. Please try again.' }, { status: 500 });
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const token = searchParams.get('token');
+
+    if (!token || !resetTokens.has(token)) {
+      return NextResponse.json({ error: 'Invalid or expired reset token' }, { status: 400 });
+    }
+
+    const tokenData = resetTokens.get(token)!;
+    
+    // Check if token is expired
+    if (tokenData.expires < Date.now()) {
+      resetTokens.delete(token);
+      return NextResponse.json({ error: 'Reset token has expired' }, { status: 400 });
+    }
+
+    return NextResponse.json({ 
+      valid: true, 
+      email: tokenData.email 
+    });
+  } catch (error) {
+    console.error('Verify token error:', error);
+    return NextResponse.json({ error: 'Something went wrong' }, { status: 500 });
   }
 }
 

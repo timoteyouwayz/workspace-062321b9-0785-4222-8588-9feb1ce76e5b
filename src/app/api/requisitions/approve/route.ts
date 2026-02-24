@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 import { getSession } from '@/lib/auth';
+import { updateRequisitionInSheet } from '@/lib/google';
 
 // POST approve/reject/check/disburse requisition with role-based permissions
 export async function POST(request: NextRequest) {
@@ -127,6 +128,16 @@ export async function POST(request: NextRequest) {
         user: { select: { id: true, name: true, email: true } },
       },
     });
+
+    // Sync status update to Google Sheets if configured
+    if (process.env.GOOGLE_SHEETS_ID && updated.status) {
+      try {
+        await updateRequisitionInSheet(process.env.GOOGLE_SHEETS_ID, requisitionId, updated.status);
+      } catch (error) {
+        console.error('Failed to update requisition in Google Sheets:', error);
+        // Don't fail the request if sheet update fails
+      }
+    }
 
     return NextResponse.json({ requisition: updated });
   } catch (error) {

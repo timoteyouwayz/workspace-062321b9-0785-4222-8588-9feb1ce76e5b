@@ -44,6 +44,95 @@ export async function POST(request: NextRequest) {
   }
 }
 
+export async function PUT(request: NextRequest) {
+  try {
+    await requireRole(['ADMIN']);
+    const body = await request.json();
+    const { id, name, email, password, role, department, phone, googleId, googleEmail, googlePicture } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'User id is required' }, { status: 400 });
+    }
+
+    const user = await db.user.findUnique({ where: { id } });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Check if new email is already taken by another user
+    if (email && email.toLowerCase() !== user.email) {
+      const existing = await db.user.findUnique({ where: { email: email.toLowerCase() } });
+      if (existing) {
+        return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
+      }
+    }
+
+    const updateData: any = {};
+    if (name) updateData.name = name;
+    if (email) updateData.email = email.toLowerCase();
+    if (password) updateData.password = hashPassword(password);
+    if (role) updateData.role = role;
+    if (department !== undefined) updateData.department = department || null;
+    if (phone !== undefined) updateData.phone = phone || null;
+    if (googleId) updateData.googleId = googleId;
+    if (googleEmail) updateData.googleEmail = googleEmail;
+    if (googlePicture) updateData.googlePicture = googlePicture;
+
+    const updatedUser = await db.user.update({
+      where: { id },
+      data: updateData,
+      select: { id: true, name: true, email: true, role: true, department: true, phone: true, googleEmail: true }
+    });
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (err: any) {
+    console.error('Admin update user error:', err);
+    return NextResponse.json({ error: err?.message || 'Forbidden' }, { status: 403 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    await requireRole(['ADMIN']);
+    const body = await request.json();
+    const { id, ...updates } = body;
+
+    if (!id) {
+      return NextResponse.json({ error: 'User id is required' }, { status: 400 });
+    }
+
+    const user = await db.user.findUnique({ where: { id } });
+    if (!user) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+    }
+
+    // Check if new email is already taken
+    if (updates.email && updates.email.toLowerCase() !== user.email) {
+      const existing = await db.user.findUnique({ where: { email: updates.email.toLowerCase() } });
+      if (existing) {
+        return NextResponse.json({ error: 'Email already in use' }, { status: 400 });
+      }
+      updates.email = updates.email.toLowerCase();
+    }
+
+    // Hash password if provided
+    if (updates.password) {
+      updates.password = hashPassword(updates.password);
+    }
+
+    const updatedUser = await db.user.update({
+      where: { id },
+      data: updates,
+      select: { id: true, name: true, email: true, role: true, department: true, phone: true, googleEmail: true, createdAt: true }
+    });
+
+    return NextResponse.json({ user: updatedUser });
+  } catch (err: any) {
+    console.error('Admin patch user error:', err);
+    return NextResponse.json({ error: err?.message || 'Forbidden' }, { status: 403 });
+  }
+}
+
 export async function DELETE(request: NextRequest) {
   try {
     await requireRole(['ADMIN']);

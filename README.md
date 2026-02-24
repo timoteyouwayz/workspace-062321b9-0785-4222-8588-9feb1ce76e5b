@@ -1,5 +1,7 @@
 # 🚀 Welcome to Z.ai Code Scaffold
 
+> ⚡ **NEW TO THIS PROJECT?** Start here: **[START_HERE.md](START_HERE.md)** - Visual roadmap to get you up and running in 1-2 hours!
+
 A modern, production-ready web application scaffold powered by cutting-edge technologies, designed to accelerate your development with [Z.ai](https://chat.z.ai)'s AI-powered coding assistance.
 
 ## ✨ Technology Stack
@@ -47,7 +49,7 @@ This scaffold provides a robust foundation built with:
 - **🎨 Beautiful UI** - Complete shadcn/ui component library with advanced interactions
 - **🔒 Type Safety** - Full TypeScript configuration with Zod validation
 - **📱 Responsive** - Mobile-first design principles with smooth animations
-- **🗄️ Database Ready** - Prisma ORM configured for rapid backend development
+- **🗄️ Database Ready** - Prisma ORM with SQLite, PostgreSQL, and MySQL support
 - **🔐 Auth Included** - NextAuth.js for secure authentication flows
 - **📊 Data Visualization** - Charts, tables, and drag-and-drop functionality
 - **🌍 i18n Ready** - Multi-language support with Next Intl
@@ -128,6 +130,37 @@ This scaffold includes a comprehensive set of modern web development tools:
 - **Image Optimization**: Automatic image processing with Sharp
 - **Type Safety**: End-to-end TypeScript with Zod validation
 - **Essential Hooks**: 100+ useful React hooks with ReactUse for common patterns
+
+## 📖 Documentation
+
+**Choose your deployment path:**
+
+| Document | Best For |
+|----------|----------|
+| **[CPANEL_DEPLOYMENT.md](CPANEL_DEPLOYMENT.md)** | 🚀 **Start here for cPanel** - Complete step-by-step from zero |
+| [SETUP.md](SETUP.md) | 💻 Local development with VSCode |
+| [DATABASE_QUICK_REFERENCE.md](DATABASE_QUICK_REFERENCE.md) | 🗄️ Database setup cheat sheet |
+| [DATABASE_SETUP.md](DATABASE_SETUP.md) | 🗄️ Complete database configuration |
+| [DEPLOYMENT.md](DEPLOYMENT.md) | 🚀 VPS/Linux server deployment |
+| [PRE_DEPLOYMENT_CHECKLIST.md](PRE_DEPLOYMENT_CHECKLIST.md) | ✅ Pre-launch verification (90+ items) |
+| [API.md](API.md) | 📚 API endpoint documentation |
+
+### Quick Start
+
+**Local Development:**
+```bash
+git clone <your-repo>
+bun install
+bun run dev
+```
+
+**Production on cPanel:**
+👉 **[Follow CPANEL_DEPLOYMENT.md Step-by-Step](CPANEL_DEPLOYMENT.md)** (18 steps, takes ~1 hour)
+
+**Other Hosting:**
+1. See [DATABASE_QUICK_REFERENCE.md](DATABASE_QUICK_REFERENCE.md) for database choice
+2. Follow [DEPLOYMENT.md](DEPLOYMENT.md)
+3. Verify with [PRE_DEPLOYMENT_CHECKLIST.md](PRE_DEPLOYMENT_CHECKLIST.md)
 
 ## 🤝 Get Started with Z.ai
 
