@@ -165,13 +165,14 @@ chmod -R 755 uploads data logs
 1. cPanel → Node.js App Manager
 2. Create Node.js Application
 3. Node version: Latest LTS (v20+)
-4. Startup file: `server.js`
+4. Startup file/command: `node .next/standalone/server.js` (or simply
+   `npm start` if you’ve installed bun and wish to keep using it)
 5. Click Create
 
 **Option B: Manual PM2 (if available)**
 ```bash
 npm install -g pm2
-pm2 start "bun start" --name "requisition-app"
+pm2 start "npm start" --name "requisition-app"
 pm2 startup
 pm2 save
 ```
