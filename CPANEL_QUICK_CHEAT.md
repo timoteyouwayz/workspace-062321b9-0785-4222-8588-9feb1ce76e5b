@@ -29,6 +29,10 @@ cd public_html
 git clone https://github.com/yourusername/repo.git .
 ```
 
+> 💡 *Tip:* the repository can include the built bundle so that the host never
+> needs to run `next build`. See the notes below about committing `.next/standalone`
+> or using the provided GitHub Action which automatically does this on every push.
+
 ---
 
 ### Phase 3: Install & Setup (30 min)
@@ -107,6 +111,28 @@ bun prisma db push
 bun prisma db seed
 ```
 
+### Phase 6: Build App (3 min)
+
+This step may fail on low‑memory shared hosts – if you see an “out of memory”
+error during `next build`, simply build locally and push the resulting
+`.next/standalone` folder instead (the repository is configured to allow that).
+You can also enable the GitHub Action `build-for-cpanel.yml` which will run
+`npm run build` on every push and commit the standalone bundle for you.
+
+```bash
+cd ~/public_html/subdomain
+bun run build           # or npm run build
+```
+
+When building locally the steps look like:
+
+```bash
+# on your own machine
+git clone … && cd repo
+bun install             # or npm install
+bun run build           # produces .next/standalone
+# commit the standalone directory so cPanel gets it
+```
 **Demo Credentials:**
 - admin@example.com / admin123
 - staff@example.com / staff123
