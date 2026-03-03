@@ -1,0 +1,8 @@
+---
+deployment:
+  targets:
+    - deployment_target: default
+      paths:
+        - public_html/workspace-062321b9-0785-4222-8588-9feb1ce76e5b
+      on_push: true
+      on_pull: true
