@@ -6,10 +6,9 @@ generator client {
 }
 
 // Database configuration
-// For development: SQLite (file:./dev.db)
-// For production: PostgreSQL (postgresql://user:password@host:port/dbname)
+// For production: MySQL (mysql://user:password@host:port/dbname)
 datasource db {
-  provider = env("DATABASE_PROVIDER")
+  provider = "mysql"
   url      = env("DATABASE_URL")
 }
 
