@@ -5,9 +5,6 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Animate.css comment or other comments can go here */
-
-/* Theme variables */
 @layer base {
   :root {
     --radius: 0.625rem;
