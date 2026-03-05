@@ -5,9 +5,6 @@
 /* Animate.css */
 @import "tw-animate-css/dist/tw-animate.min.css";
 
-/* Optional: Tailwind variant plugin features */
-@custom-variant dark (&:is(.dark *));
-
 /* Theme variables */
 @layer base {
   :root {
