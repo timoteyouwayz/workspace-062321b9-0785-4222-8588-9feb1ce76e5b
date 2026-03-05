@@ -1,9 +1,11 @@
+@import "tw-animate-css/dist/tw-animate.min.css";
+
+/* Tailwind base */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Animate.css */
-@import "tw-animate-css/dist/tw-animate.min.css";
+/* Animate.css comment or other comments can go here */
 
 /* Theme variables */
 @layer base {
