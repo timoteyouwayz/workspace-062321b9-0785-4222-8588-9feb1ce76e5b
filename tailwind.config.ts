@@ -59,6 +59,6 @@ const config: Config = {
   		}
   	}
   },
-  plugins: [tailwindcssAnimate],
+  plugins: [require("tailwindcssAnimate")],
 };
 export default config;
