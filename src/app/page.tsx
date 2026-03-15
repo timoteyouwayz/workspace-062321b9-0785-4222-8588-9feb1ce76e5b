@@ -177,6 +177,35 @@ function numberToWords(num: number): string {
     "",
     "Twenty",
     "Thirty",
+    "Forty",
+    "Fifty",
+    "Sixty",
+    "Seventy",
+    "Eighty",
+    "Ninety",
+  ];
+  const teens = [
+    "Ten",
+    "Eleven",
+    "Twelve",
+    "Thirteen",
+    "Fourteen",
+    "Fifteen",
+    "Sixteen",
+    "Seventeen",
+    "Eighteen",
+    "Nineteen",
+  ];
+  if (num === 0) return "Zero";
+  if (num < 10) return ones[num];
+  if (num < 20) return teens[num - 10];
+  if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? "-" + ones[num % 10] : "");
+  if (num < 1000) return ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " and " + numberToWords(num % 100) : "");
+  if (num < 1000000) return numberToWords(Math.floor(num / 1000)) + " Thousand" + (num % 1000 ? " " + numberToWords(num % 1000) : "");
+  return num.toString();
+}
+
+export default function NGOManagementSystem() {
     // Form states
     const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [loginError, setLoginError] = useState('');
@@ -208,17 +237,6 @@ function numberToWords(num: number): string {
     const [receiptDescription, setReceiptDescription] = useState('');
     const [receiptAmount, setReceiptAmount] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    );
-  if (num < 1000000)
-    return (
-      numberToWords(Math.floor(num / 1000)) +
-      " Thousand" +
-      (num % 1000 ? " " + numberToWords(num % 1000) : "")
-    );
-  return num.toString();
-}
-
-export default function NGOManagementSystem() {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
