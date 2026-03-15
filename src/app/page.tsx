@@ -1139,8 +1139,7 @@ export default function NGOManagementSystem() {
           </DialogContent>
         </Dialog>
       </div>
-    );
-  }
+      );
 
   // Main dashboard
   const myRequisitions = requisitions.filter((r) => r.userId === user.id);
