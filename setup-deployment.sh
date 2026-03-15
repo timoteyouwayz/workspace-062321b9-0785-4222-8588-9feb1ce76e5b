@@ -1,6 +1,7 @@
 #!/bin/bash
 # Deployment Setup Script
-# Run this after uploading files to your cPanel folder
+#!/bin/bash
+# Run this after uploading files to your server (non-cPanel)
 # Usage: bash setup-deployment.sh
 
 set -e  # Exit on any error
