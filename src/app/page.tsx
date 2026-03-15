@@ -207,33 +207,7 @@ function numberToWords(num: number): string {
 
 export default function NGOManagementSystem() {
     // Form states
-    const [loginForm, setLoginForm] = useState({ email: '', password: '' });
     const [loginError, setLoginError] = useState('');
-    const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', confirmPassword: '', department: '', phone: '' });
-    const [newReqForm, setNewReqForm] = useState({
-      reason: '',
-      description: '',
-      eventDate: '',
-      dateNeeded: '',
-      participants: '',
-      transportDistance: '',
-      transportQuantity: '',
-      accountToCharge: '',
-      expenseItems: [{ item: '', amount: '' }] as { item: string; amount: string }[],
-      status: '',
-    });
-    const [editForm, setEditForm] = useState({
-      reason: '',
-      description: '',
-      eventDate: '',
-      dateNeeded: '',
-      participants: '',
-      transportDistance: '',
-      transportQuantity: '',
-      accountToCharge: '',
-      expenseItems: [{ item: '', amount: '' }] as { item: string; amount: string }[],
-      status: '',
-    });
     const [receiptDescription, setReceiptDescription] = useState('');
     const [receiptAmount, setReceiptAmount] = useState('');
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
