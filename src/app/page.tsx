@@ -392,7 +392,7 @@ export default function NGOManagementSystem() {
         variant: "destructive",
       });
     }
-  };
+  }
 
   // Admin: create user via admin panel
   const createAdminUser = async (e: React.FormEvent) => {
@@ -2748,4 +2748,4 @@ export default function NGOManagementSystem() {
       </Dialog>
     </div>
   );
-}
+  }
