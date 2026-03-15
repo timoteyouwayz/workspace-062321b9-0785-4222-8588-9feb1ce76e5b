@@ -199,18 +199,29 @@ function numberToWords(num: number): string {
   if (num === 0) return "Zero";
   if (num < 10) return ones[num];
   if (num < 20) return teens[num - 10];
-  if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? "-" + ones[num % 10] : "");
-  if (num < 1000) return ones[Math.floor(num / 100)] + " Hundred" + (num % 100 ? " and " + numberToWords(num % 100) : "");
-  if (num < 1000000) return numberToWords(Math.floor(num / 1000)) + " Thousand" + (num % 1000 ? " " + numberToWords(num % 1000) : "");
+  if (num < 100)
+    return tens[Math.floor(num / 10)] + (num % 10 ? "-" + ones[num % 10] : "");
+  if (num < 1000)
+    return (
+      ones[Math.floor(num / 100)] +
+      " Hundred" +
+      (num % 100 ? " and " + numberToWords(num % 100) : "")
+    );
+  if (num < 1000000)
+    return (
+      numberToWords(Math.floor(num / 1000)) +
+      " Thousand" +
+      (num % 1000 ? " " + numberToWords(num % 1000) : "")
+    );
   return num.toString();
 }
 
 export default function NGOManagementSystem() {
-    // Form states
-    const [loginError, setLoginError] = useState('');
-    const [receiptDescription, setReceiptDescription] = useState('');
-    const [receiptAmount, setReceiptAmount] = useState('');
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Form states
+  const [loginError, setLoginError] = useState("");
+  const [receiptDescription, setReceiptDescription] = useState("");
+  const [receiptAmount, setReceiptAmount] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [requisitions, setRequisitions] = useState<Requisition[]>([]);
@@ -286,9 +297,7 @@ export default function NGOManagementSystem() {
     }[],
     status: "",
   });
-  const [receiptDescription, setReceiptDescription] = useState("");
-  const [receiptAmount, setReceiptAmount] = useState("");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // Removed duplicate declarations
 
   // Check session on mount
   useEffect(() => {
@@ -340,13 +349,20 @@ export default function NGOManagementSystem() {
         setLoginError("");
         setUser(data.user);
         fetchRequisitions();
-        toast({ title: "Welcome back!", description: `Hello, ${data.user.name}!` });
+        toast({
+          title: "Welcome back!",
+          description: `Hello, ${data.user.name}!`,
+        });
       }
     } catch (error) {
       setLoginError("Could not log in. Please try again.");
-      toast({ title: "Error", description: "Could not log in. Please try again.", variant: "destructive" });
+      toast({
+        title: "Error",
+        description: "Could not log in. Please try again.",
+        variant: "destructive",
+      });
     }
-  }
+  };
 
   // Admin: create user via admin panel
   const createAdminUser = async (e: React.FormEvent) => {
@@ -1093,350 +1109,274 @@ export default function NGOManagementSystem() {
           </DialogContent>
         </Dialog>
       </div>
-      );
+    );
 
-  // Main dashboard
-  const myRequisitions = requisitions.filter((r) => r.userId === user.id);
-  const pendingForReview = requisitions.filter((r) => r.status === "PENDING");
-  const pendingForApproval = requisitions.filter((r) => r.status === "CHECKED");
-  const pendingForDisbursement = requisitions.filter(
-    (r) => r.status === "APPROVED",
-  );
-  const needsReceipts = getBlockingRequisitions();
-  const canCreateNew = canCreateNewRequisition();
+    // Main dashboard
+    const myRequisitions = requisitions.filter((r) => r.userId === user.id);
+    const pendingForReview = requisitions.filter((r) => r.status === "PENDING");
+    const pendingForApproval = requisitions.filter(
+      (r) => r.status === "CHECKED",
+    );
+    const pendingForDisbursement = requisitions.filter(
+      (r) => r.status === "APPROVED",
+    );
+    const needsReceipts = getBlockingRequisitions();
+    const canCreateNew = canCreateNewRequisition();
 
-  return (
-    <div className="min-h-screen bg-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b shadow-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Building2 className="h-8 w-8 text-slate-700" />
-            <div>
-              <h1 className="text-xl font-bold text-slate-800">
-                Youth For Christ
-              </h1>
-              <p className="text-sm text-slate-500">Money Request System</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            {/* Google Drive Status */}
-            {driveStatus && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowDriveSettings(true)}
-                className={
-                  driveStatus.configured ? "text-green-600" : "text-slate-400"
-                }
-              >
-                <Cloud className="h-4 w-4 mr-1" />
-                {driveStatus.configured ? "Drive Connected" : "Drive Setup"}
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => setShowHelp(true)}>
-              <HelpCircle className="h-4 w-4 mr-1" />
-              Help
-            </Button>
-            {user.role === "ADMIN" && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setShowAdminUsers(true)}
-              >
-                <Key className="h-4 w-4 mr-1" />
-                Manage Users
-              </Button>
-            )}
-            <div className="text-right">
-              <p className="font-medium text-slate-800">{user.name}</p>
-              <p className="text-sm text-slate-500">{user.role}</p>
-            </div>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Log Out
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
-        {/* Warning for pending receipts */}
-        {needsReceipts.length > 0 && (
-          <Alert className="mb-6 border-orange-300 bg-orange-50">
-            <AlertTriangle className="h-4 w-4 text-orange-600" />
-            <AlertDescription className="text-orange-800">
-              <strong>Action Required:</strong> You have {needsReceipts.length}{" "}
-              request(s) that need receipts. Please upload receipts for past
-              requests before making new ones.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-slate-500">My Requests</p>
-                  <p className="text-3xl font-bold">{myRequisitions.length}</p>
-                </div>
-                <FileText className="h-10 w-10 text-slate-300" />
+    return (
+      <div className="min-h-screen bg-slate-50 flex flex-col">
+        {/* Header */}
+        <header className="bg-white border-b shadow-sm sticky top-0 z-50">
+          <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <Building2 className="h-8 w-8 text-slate-700" />
+              <div>
+                <h1 className="text-xl font-bold text-slate-800">
+                  Youth For Christ
+                </h1>
+                <p className="text-sm text-slate-500">Money Request System</p>
               </div>
-            </CardContent>
-          </Card>
-
-          {/* Accounts Officer - Can check and disburse */}
-          {["ACCOUNTANT", "ADMIN"].includes(user.role) && (
-            <>
-              <Card className="border-l-4 border-l-yellow-400">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">To Check</p>
-                      <p className="text-3xl font-bold">
-                        {pendingForReview.length}
-                      </p>
-                    </div>
-                    <Clock className="h-10 w-10 text-yellow-400" />
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card className="border-l-4 border-l-green-400">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm text-slate-500">To Send Money</p>
-                      <p className="text-3xl font-bold">
-                        {pendingForDisbursement.length}
-                      </p>
-                    </div>
-                    <CheckCircle className="h-10 w-10 text-green-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </>
-          )}
-
-          {/* Director - Can approve only */}
-          {["DIRECTOR", "ADMIN"].includes(user.role) && (
-            <Card className="border-l-4 border-l-blue-400">
-              <CardContent className="p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-slate-500">To Approve</p>
-                    <p className="text-3xl font-bold">
-                      {pendingForApproval.length}
-                    </p>
-                  </div>
-                  <CheckCircle className="h-10 w-10 text-blue-400" />
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-
-        {/* Tabs */}
-        <Tabs
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="space-y-4"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <TabsList>
-              <TabsTrigger value="dashboard">Home</TabsTrigger>
-              <TabsTrigger value="my-requests">My Requests</TabsTrigger>
-              {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
-                <TabsTrigger value="approvals">
-                  Work Queue
-                  {pendingForReview.length +
-                    pendingForApproval.length +
-                    pendingForDisbursement.length >
-                    0 && (
-                    <Badge className="ml-2 bg-red-500 text-white">
-                      {pendingForReview.length +
-                        pendingForApproval.length +
-                        pendingForDisbursement.length}
-                    </Badge>
-                  )}
-                </TabsTrigger>
-              )}
-            </TabsList>
-
-            <div className="flex gap-2">
-              {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
-                <Button variant="outline" onClick={handleExportToSheets}>
-                  <FileSpreadsheet className="h-4 w-4 mr-2" />
-                  Export
+            </div>
+            <div className="flex items-center gap-4">
+              {/* Google Drive Status */}
+              {driveStatus && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowDriveSettings(true)}
+                  className={
+                    driveStatus.configured ? "text-green-600" : "text-slate-400"
+                  }
+                >
+                  <Cloud className="h-4 w-4 mr-1" />
+                  {driveStatus.configured ? "Drive Connected" : "Drive Setup"}
                 </Button>
               )}
               <Button
-                onClick={() => setShowNewRequisition(true)}
-                disabled={!canCreateNew}
+                variant="ghost"
+                size="sm"
+                onClick={() => setShowHelp(true)}
               >
-                <Plus className="h-4 w-4 mr-2" />
-                New Request
+                <HelpCircle className="h-4 w-4 mr-1" />
+                Help
+              </Button>
+              {user.role === "ADMIN" && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setShowAdminUsers(true)}
+                >
+                  <Key className="h-4 w-4 mr-1" />
+                  Manage Users
+                </Button>
+              )}
+              <div className="text-right">
+                <p className="font-medium text-slate-800">{user.name}</p>
+                <p className="text-sm text-slate-500">{user.role}</p>
+              </div>
+              <Button variant="outline" size="sm" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Log Out
               </Button>
             </div>
           </div>
+        </header>
 
-          {/* Dashboard Tab */}
-          <TabsContent value="dashboard" className="space-y-4">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-80">
-                    {requisitions.slice(0, 10).map((req) => (
-                      <div
-                        key={req.id}
-                        className="flex items-center justify-between py-3 border-b last:border-0"
-                      >
-                        <div className="flex items-center gap-3">
-                          <FileText className="h-5 w-5 text-slate-400" />
-                          <div>
-                            <p className="font-medium text-sm">{req.reason}</p>
-                            <p className="text-xs text-slate-500">
-                              by {req.user.name} •{" "}
-                              {new Date(req.createdAt).toLocaleDateString()}
-                            </p>
-                          </div>
-                        </div>
-                        <Badge className={statusConfig[req.status]?.color}>
-                          {statusConfig[req.status]?.label}
-                        </Badge>
+        {/* Main Content */}
+        <main className="flex-1 max-w-7xl mx-auto px-4 py-6 w-full">
+          {/* Warning for pending receipts */}
+          {needsReceipts.length > 0 && (
+            <Alert className="mb-6 border-orange-300 bg-orange-50">
+              <AlertTriangle className="h-4 w-4 text-orange-600" />
+              <AlertDescription className="text-orange-800">
+                <strong>Action Required:</strong> You have{" "}
+                {needsReceipts.length} request(s) that need receipts. Please
+                upload receipts for past requests before making new ones.
+              </AlertDescription>
+            </Alert>
+          )}
+
+          {/* Stats Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+            <Card>
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-slate-500">My Requests</p>
+                    <p className="text-3xl font-bold">
+                      {myRequisitions.length}
+                    </p>
+                  </div>
+                  <FileText className="h-10 w-10 text-slate-300" />
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Accounts Officer - Can check and disburse */}
+            {["ACCOUNTANT", "ADMIN"].includes(user.role) && (
+              <>
+                <Card className="border-l-4 border-l-yellow-400">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-500">To Check</p>
+                        <p className="text-3xl font-bold">
+                          {pendingForReview.length}
+                        </p>
                       </div>
-                    ))}
-                    {requisitions.length === 0 && (
-                      <p className="text-center text-slate-500 py-8">
-                        No requests yet
+                      <Clock className="h-10 w-10 text-yellow-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-green-400">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <p className="text-sm text-slate-500">To Send Money</p>
+                        <p className="text-3xl font-bold">
+                          {pendingForDisbursement.length}
+                        </p>
+                      </div>
+                      <CheckCircle className="h-10 w-10 text-green-400" />
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {/* Director - Can approve only */}
+            {["DIRECTOR", "ADMIN"].includes(user.role) && (
+              <Card className="border-l-4 border-l-blue-400">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-500">To Approve</p>
+                      <p className="text-3xl font-bold">
+                        {pendingForApproval.length}
                       </p>
-                    )}
-                  </ScrollArea>
+                    </div>
+                    <CheckCircle className="h-10 w-10 text-blue-400" />
+                  </div>
                 </CardContent>
               </Card>
+            )}
+          </div>
 
-              {/* Needs Action */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <AlertTriangle className="h-5 w-5 text-orange-500" />
-                    Needs Your Attention
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <ScrollArea className="h-80">
-                    {needsReceipts.length > 0 && (
-                      <div className="mb-4">
-                        <h4 className="font-medium text-sm text-slate-600 mb-2">
-                          Receipts Needed
-                        </h4>
-                        {needsReceipts.map((req) => (
-                          <div
-                            key={req.id}
-                            className="flex items-center justify-between py-2 px-3 bg-orange-50 rounded-lg mb-2"
-                          >
+          {/* Tabs */}
+          <Tabs
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="space-y-4"
+          >
+            <div className="flex flex-wrap items-center justify-between gap-4">
+              <TabsList>
+                <TabsTrigger value="dashboard">Home</TabsTrigger>
+                <TabsTrigger value="my-requests">My Requests</TabsTrigger>
+                {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
+                  <TabsTrigger value="approvals">
+                    Work Queue
+                    {pendingForReview.length +
+                      pendingForApproval.length +
+                      pendingForDisbursement.length >
+                      0 && (
+                      <Badge className="ml-2 bg-red-500 text-white">
+                        {pendingForReview.length +
+                          pendingForApproval.length +
+                          pendingForDisbursement.length}
+                      </Badge>
+                    )}
+                  </TabsTrigger>
+                )}
+              </TabsList>
+
+              <div className="flex gap-2">
+                {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
+                  <Button variant="outline" onClick={handleExportToSheets}>
+                    <FileSpreadsheet className="h-4 w-4 mr-2" />
+                    Export
+                  </Button>
+                )}
+                <Button
+                  onClick={() => setShowNewRequisition(true)}
+                  disabled={!canCreateNew}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  New Request
+                </Button>
+              </div>
+            </div>
+
+            {/* Dashboard Tab */}
+            <TabsContent value="dashboard" className="space-y-4">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Activity */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Recent Activity</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-80">
+                      {requisitions.slice(0, 10).map((req) => (
+                        <div
+                          key={req.id}
+                          className="flex items-center justify-between py-3 border-b last:border-0"
+                        >
+                          <div className="flex items-center gap-3">
+                            <FileText className="h-5 w-5 text-slate-400" />
                             <div>
                               <p className="font-medium text-sm">
                                 {req.reason}
                               </p>
                               <p className="text-xs text-slate-500">
-                                Event was on{" "}
-                                {new Date(req.eventDate).toLocaleDateString()}
+                                by {req.user.name} •{" "}
+                                {new Date(req.createdAt).toLocaleDateString()}
                               </p>
                             </div>
-                            <Button
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRequisition(req);
-                                setShowReceiptUpload(true);
-                              }}
-                            >
-                              <Upload className="h-4 w-4 mr-1" />
-                              Upload Receipt
-                            </Button>
                           </div>
-                        ))}
-                      </div>
-                    )}
+                          <Badge className={statusConfig[req.status]?.color}>
+                            {statusConfig[req.status]?.label}
+                          </Badge>
+                        </div>
+                      ))}
+                      {requisitions.length === 0 && (
+                        <p className="text-center text-slate-500 py-8">
+                          No requests yet
+                        </p>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
 
-                    {needsReceipts.length === 0 && (
-                      <div className="flex flex-col items-center justify-center py-8 text-slate-500">
-                        <CheckCircle className="h-12 w-12 text-green-400 mb-2" />
-                        <p>All caught up!</p>
-                      </div>
-                    )}
-                  </ScrollArea>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* My Requisitions Tab */}
-          <TabsContent value="my-requests" className="space-y-4">
-            <Card>
-              <CardHeader>
-                <CardTitle>My Money Requests</CardTitle>
-                <CardDescription>View and manage your requests</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  {myRequisitions.map((req) => (
-                    <Card
-                      key={req.id}
-                      className="border-l-4 border-l-slate-400"
-                    >
-                      <CardContent className="p-4">
-                        <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <div className="flex flex-wrap items-center gap-2 mb-2">
-                              <Badge
-                                className={statusConfig[req.status]?.color}
-                              >
-                                {statusConfig[req.status]?.label}
-                              </Badge>
-                              {needsToSubmitReceipt(req) && (
-                                <Badge variant="destructive">
-                                  Receipt Required
-                                </Badge>
-                              )}
-                            </div>
-                            <h3 className="font-semibold">{req.reason}</h3>
-                            <p className="text-sm text-slate-600 mb-2">
-                              {req.description}
-                            </p>
-                            <p className="text-xs text-slate-500">
-                              {statusConfig[req.status]?.description}
-                            </p>
-                            <div className="flex flex-wrap gap-4 text-sm text-slate-500 mt-2">
-                              <span className="font-semibold text-green-600">
-                                KES {req.totalAmount.toLocaleString()}
-                              </span>
-                              <span>
-                                Event:{" "}
-                                {new Date(req.eventDate).toLocaleDateString()}
-                              </span>
-                            </div>
-                          </div>
-                          <div className="flex flex-wrap gap-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => {
-                                setSelectedRequisition(req);
-                                setShowRequisitionDetail(true);
-                              }}
+                {/* Needs Action */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                      <AlertTriangle className="h-5 w-5 text-orange-500" />
+                      Needs Your Attention
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <ScrollArea className="h-80">
+                      {needsReceipts.length > 0 && (
+                        <div className="mb-4">
+                          <h4 className="font-medium text-sm text-slate-600 mb-2">
+                            Receipts Needed
+                          </h4>
+                          {needsReceipts.map((req) => (
+                            <div
+                              key={req.id}
+                              className="flex items-center justify-between py-2 px-3 bg-orange-50 rounded-lg mb-2"
                             >
-                              <Eye className="h-4 w-4 mr-1" />
-                              View
-                            </Button>
-                            {needsToSubmitReceipt(req) && (
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {req.reason}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Event was on{" "}
+                                  {new Date(req.eventDate).toLocaleDateString()}
+                                </p>
+                              </div>
                               <Button
                                 size="sm"
                                 onClick={() => {
@@ -1447,1259 +1387,1378 @@ export default function NGOManagementSystem() {
                                 <Upload className="h-4 w-4 mr-1" />
                                 Upload Receipt
                               </Button>
-                            )}
-                            {["PENDING", "REJECTED"].includes(req.status) && (
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {needsReceipts.length === 0 && (
+                        <div className="flex flex-col items-center justify-center py-8 text-slate-500">
+                          <CheckCircle className="h-12 w-12 text-green-400 mb-2" />
+                          <p>All caught up!</p>
+                        </div>
+                      )}
+                    </ScrollArea>
+                  </CardContent>
+                </Card>
+              </div>
+            </TabsContent>
+
+            {/* My Requisitions Tab */}
+            <TabsContent value="my-requests" className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>My Money Requests</CardTitle>
+                  <CardDescription>
+                    View and manage your requests
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {myRequisitions.map((req) => (
+                      <Card
+                        key={req.id}
+                        className="border-l-4 border-l-slate-400"
+                      >
+                        <CardContent className="p-4">
+                          <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <div className="flex flex-wrap items-center gap-2 mb-2">
+                                <Badge
+                                  className={statusConfig[req.status]?.color}
+                                >
+                                  {statusConfig[req.status]?.label}
+                                </Badge>
+                                {needsToSubmitReceipt(req) && (
+                                  <Badge variant="destructive">
+                                    Receipt Required
+                                  </Badge>
+                                )}
+                              </div>
+                              <h3 className="font-semibold">{req.reason}</h3>
+                              <p className="text-sm text-slate-600 mb-2">
+                                {req.description}
+                              </p>
+                              <p className="text-xs text-slate-500">
+                                {statusConfig[req.status]?.description}
+                              </p>
+                              <div className="flex flex-wrap gap-4 text-sm text-slate-500 mt-2">
+                                <span className="font-semibold text-green-600">
+                                  KES {req.totalAmount.toLocaleString()}
+                                </span>
+                                <span>
+                                  Event:{" "}
+                                  {new Date(req.eventDate).toLocaleDateString()}
+                                </span>
+                              </div>
+                            </div>
+                            <div className="flex flex-wrap gap-2">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="text-red-600 border-red-300"
                                 onClick={() => {
                                   setSelectedRequisition(req);
-                                  setShowDeleteConfirm(true);
+                                  setShowRequisitionDetail(true);
                                 }}
                               >
-                                <Trash2 className="h-4 w-4 mr-1" />
-                                Delete
+                                <Eye className="h-4 w-4 mr-1" />
+                                View
                               </Button>
-                            )}
-                            {req.status !== "PENDING" &&
-                              req.status !== "REJECTED" && (
+                              {needsToSubmitReceipt(req) && (
+                                <Button
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedRequisition(req);
+                                    setShowReceiptUpload(true);
+                                  }}
+                                >
+                                  <Upload className="h-4 w-4 mr-1" />
+                                  Upload Receipt
+                                </Button>
+                              )}
+                              {["PENDING", "REJECTED"].includes(req.status) && (
                                 <Button
                                   variant="outline"
                                   size="sm"
-                                  onClick={() => handleExport(req.id)}
+                                  className="text-red-600 border-red-300"
+                                  onClick={() => {
+                                    setSelectedRequisition(req);
+                                    setShowDeleteConfirm(true);
+                                  }}
                                 >
-                                  <Download className="h-4 w-4 mr-1" />
-                                  Download
+                                  <Trash2 className="h-4 w-4 mr-1" />
+                                  Delete
                                 </Button>
                               )}
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-                  {myRequisitions.length === 0 && (
-                    <div className="text-center py-12 text-slate-500">
-                      <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
-                      <p>You haven't made any requests yet.</p>
-                      <p className="text-sm mt-2">
-                        Click "New Request" to get started!
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Work Queue Tab - Role-based sections */}
-          {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
-            <TabsContent value="approvals" className="space-y-6">
-              {/* Accounts Officer - Pending Review */}
-              {["ACCOUNTANT", "ADMIN"].includes(user.role) &&
-                pendingForReview.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>
-                        To Check ({pendingForReview.length})
-                      </CardTitle>
-                      <CardDescription>
-                        Verify these requests from staff
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {pendingForReview.map((req) => (
-                          <Card
-                            key={req.id}
-                            className="border-l-4 border-l-yellow-400"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <User className="h-4 w-4 text-slate-400" />
-                                    <span className="font-medium">
-                                      {req.user.name}
-                                    </span>
-                                    {req.user.department && (
-                                      <Badge variant="outline">
-                                        {req.user.department}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <h3 className="font-semibold">
-                                    {req.reason}
-                                  </h3>
-                                  <p className="text-sm text-slate-600 mb-2">
-                                    {req.description}
-                                  </p>
-                                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                                    <span className="font-semibold">
-                                      KES {req.totalAmount.toLocaleString()}
-                                    </span>
-                                    <span>
-                                      Event:{" "}
-                                      {new Date(
-                                        req.eventDate,
-                                      ).toLocaleDateString()}
-                                    </span>
-                                    <span>
-                                      Needed by:{" "}
-                                      {new Date(
-                                        req.dateNeeded,
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedRequisition(req);
-                                      setShowRequisitionDetail(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View
-                                  </Button>
-                                  {user.role === "ADMIN" && (
-                                    <Button
-                                      variant="outline"
-                                      size="sm"
-                                      onClick={() => openEditForm(req)}
-                                    >
-                                      <Edit className="h-4 w-4 mr-1" />
-                                      Edit
-                                    </Button>
-                                  )}
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 border-red-300"
-                                    onClick={() =>
-                                      handleApprove(req.id, "REJECT")
-                                    }
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    onClick={() =>
-                                      handleApprove(req.id, "CHECK")
-                                    }
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Mark as Checked
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {/* Director - Ready for Approval */}
-              {["DIRECTOR", "ADMIN"].includes(user.role) &&
-                pendingForApproval.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>
-                        To Approve ({pendingForApproval.length})
-                      </CardTitle>
-                      <CardDescription>
-                        These have been checked by the accounts officer
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {pendingForApproval.map((req) => (
-                          <Card
-                            key={req.id}
-                            className="border-l-4 border-l-blue-400"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <User className="h-4 w-4 text-slate-400" />
-                                    <span className="font-medium">
-                                      {req.user.name}
-                                    </span>
-                                    {req.checkedBy && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-blue-600 border-blue-300"
-                                      >
-                                        Checked by {req.checkedBy.name}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <h3 className="font-semibold">
-                                    {req.reason}
-                                  </h3>
-                                  <p className="text-sm text-slate-600 mb-2">
-                                    {req.description}
-                                  </p>
-                                  <div className="flex flex-wrap gap-4 text-sm text-slate-500">
-                                    <span className="font-semibold">
-                                      KES {req.totalAmount.toLocaleString()}
-                                    </span>
-                                    <span>
-                                      Event:{" "}
-                                      {new Date(
-                                        req.eventDate,
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    onClick={() => {
-                                      setSelectedRequisition(req);
-                                      setShowRequisitionDetail(true);
-                                    }}
-                                  >
-                                    <Eye className="h-4 w-4 mr-1" />
-                                    View
-                                  </Button>
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="text-red-600 border-red-300"
-                                    onClick={() =>
-                                      handleApprove(req.id, "REJECT")
-                                    }
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Reject
-                                  </Button>
-                                  <Button
-                                    size="sm"
-                                    className="bg-blue-600 hover:bg-blue-700"
-                                    onClick={() =>
-                                      handleApprove(req.id, "APPROVE")
-                                    }
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Approve
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-
-              {/* Accounts Officer - Ready for Disbursement */}
-              {["ACCOUNTANT", "ADMIN"].includes(user.role) &&
-                pendingForDisbursement.length > 0 && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>
-                        To Send Money ({pendingForDisbursement.length})
-                      </CardTitle>
-                      <CardDescription>
-                        These requests are approved - send money and mark as
-                        disbursed
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        {pendingForDisbursement.map((req) => (
-                          <Card
-                            key={req.id}
-                            className="border-l-4 border-l-green-400"
-                          >
-                            <CardContent className="p-4">
-                              <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-2">
-                                    <User className="h-4 w-4 text-slate-400" />
-                                    <span className="font-medium">
-                                      {req.user.name}
-                                    </span>
-                                    {req.approvedBy && (
-                                      <Badge
-                                        variant="outline"
-                                        className="text-green-600 border-green-300"
-                                      >
-                                        Approved by {req.approvedBy.name}
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <h3 className="font-semibold">
-                                    {req.reason}
-                                  </h3>
-                                  <p className="text-sm text-slate-600 mb-2">
-                                    {req.description}
-                                  </p>
-                                  <div className="flex flex-wrap gap-4 text-sm">
-                                    <span className="font-bold text-green-600 text-lg">
-                                      KES {req.totalAmount.toLocaleString()}
-                                    </span>
-                                    <span className="text-slate-500">
-                                      Event:{" "}
-                                      {new Date(
-                                        req.eventDate,
-                                      ).toLocaleDateString()}
-                                    </span>
-                                  </div>
-                                </div>
-                                <div className="flex flex-wrap gap-2">
+                              {req.status !== "PENDING" &&
+                                req.status !== "REJECTED" && (
                                   <Button
                                     variant="outline"
                                     size="sm"
                                     onClick={() => handleExport(req.id)}
                                   >
                                     <Download className="h-4 w-4 mr-1" />
-                                    Download Form
+                                    Download
                                   </Button>
-                                  <Button
-                                    size="sm"
-                                    className="bg-green-600 hover:bg-green-700"
-                                    onClick={() =>
-                                      handleApprove(req.id, "DISBURSE")
-                                    }
-                                  >
-                                    <CheckCircle className="h-4 w-4 mr-1" />
-                                    Mark as Sent
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-            </TabsContent>
-          )}
-        </Tabs>
-      </main>
-
-      {/* Footer */}
-      <footer className="bg-white border-t py-4 mt-auto">
-        <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
-          Youth For Christ • Money Request System © {new Date().getFullYear()}
-        </div>
-      </footer>
-
-      {/* Help Dialog */}
-      <Dialog open={showHelp} onOpenChange={setShowHelp}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>How to Use This System</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <h4 className="font-semibold mb-1">For Staff:</h4>
-              <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
-                <li>Click "New Request" to create a money request</li>
-                <li>Fill in the form with details and amounts</li>
-                <li>Wait for Accounts to check and Director to approve</li>
-                <li>After money is sent, upload your receipt</li>
-              </ol>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-1">For Accounts Officer:</h4>
-              <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
-                <li>Go to "Work Queue" tab</li>
-                <li>Check each request and click "Mark as Checked"</li>
-                <li>
-                  After Director approves, send money and click "Mark as Sent"
-                </li>
-                <li>Verify receipts when staff submit them</li>
-              </ol>
-            </div>
-            <div>
-              <h4 className="font-semibold mb-1">For National Director:</h4>
-              <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
-                <li>Go to "Work Queue" tab</li>
-                <li>Review checked requests</li>
-                <li>Click "Approve" or "Reject" for each</li>
-              </ol>
-            </div>
-            <div className="bg-amber-50 p-3 rounded-lg">
-              <p className="text-sm text-amber-800">
-                <strong>Important:</strong> Staff cannot create new requests
-                until all pending receipts are uploaded after the event date.
-              </p>
-            </div>
-            <div className="bg-green-50 p-3 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>Partial Receipts:</strong> If a receipt is for less than
-                the total amount, the balance remains until full amount is
-                covered.
-              </p>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Admin: Manage Users Dialog */}
-      <Dialog open={showAdminUsers} onOpenChange={setShowAdminUsers}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              <div className="flex items-center gap-2">
-                <Key className="h-5 w-5" />
-                Manage Users
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4 mt-2">
-            <div>
-              <h3 className="font-medium">Existing Users</h3>
-              <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
-                {adminLoading ? (
-                  <p className="text-sm text-slate-500">Loading...</p>
-                ) : adminUsers.length === 0 ? (
-                  <p className="text-sm text-slate-500">No users found.</p>
-                ) : (
-                  adminUsers.map((u) => (
-                    <div
-                      key={u.id}
-                      className="flex items-center justify-between p-2 border rounded"
-                    >
-                      <div>
-                        <p className="font-medium">
-                          {u.name}{" "}
-                          <span className="text-xs text-slate-500">
-                            ({u.role})
-                          </span>
+                                )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
+                    {myRequisitions.length === 0 && (
+                      <div className="text-center py-12 text-slate-500">
+                        <FileText className="h-12 w-12 mx-auto mb-4 text-slate-300" />
+                        <p>You haven't made any requests yet.</p>
+                        <p className="text-sm mt-2">
+                          Click "New Request" to get started!
                         </p>
-                        <p className="text-sm text-slate-500">{u.email}</p>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => {
-                            navigator.clipboard?.writeText(u.email);
-                            toast({
-                              title: "Copied",
-                              description: "Email copied to clipboard.",
-                            });
-                          }}
-                        >
-                          <Mail className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => deleteAdminUser(u.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-
-            <hr />
-
-            <form onSubmit={createAdminUser} className="space-y-4">
-              <div>
-                <Label>Name</Label>
-                <Input
-                  value={newAdminForm.name}
-                  onChange={(e) =>
-                    setNewAdminForm({ ...newAdminForm, name: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Email</Label>
-                <Input
-                  type="email"
-                  value={newAdminForm.email}
-                  onChange={(e) =>
-                    setNewAdminForm({ ...newAdminForm, email: e.target.value })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Password</Label>
-                <Input
-                  type="password"
-                  value={newAdminForm.password}
-                  onChange={(e) =>
-                    setNewAdminForm({
-                      ...newAdminForm,
-                      password: e.target.value,
-                    })
-                  }
-                />
-              </div>
-              <div>
-                <Label>Role</Label>
-                <Select
-                  onValueChange={(v) =>
-                    setNewAdminForm({ ...newAdminForm, role: v })
-                  }
-                  value={newAdminForm.role}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Role" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="STAFF">Staff</SelectItem>
-                    <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
-                    <SelectItem value="DIRECTOR">Director</SelectItem>
-                    <SelectItem value="ADMIN">Admin</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <DialogFooter>
-                <Button type="submit">Create User</Button>
-                <Button
-                  variant="ghost"
-                  onClick={() => setShowAdminUsers(false)}
-                >
-                  Close
-                </Button>
-              </DialogFooter>
-            </form>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-      {/* Google Drive Settings Dialog */}
-      <Dialog open={showDriveSettings} onOpenChange={setShowDriveSettings}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>
-              <div className="flex items-center gap-2">
-                <Cloud className="h-5 w-5" />
-                Google Drive Integration
-              </div>
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            {driveStatus?.configured ? (
-              <div className="bg-green-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 text-green-700 mb-2">
-                  <CheckCircle className="h-5 w-5" />
-                  <span className="font-medium">Connected to Google Drive</span>
-                </div>
-                <p className="text-sm text-green-600">{driveStatus.message}</p>
-                <p className="text-xs text-green-500 mt-2">
-                  Your receipts will be automatically backed up to Google Drive
-                  when uploaded.
-                </p>
-              </div>
-            ) : (
-              <div className="bg-slate-50 p-4 rounded-lg">
-                <div className="flex items-center gap-2 text-slate-600 mb-2">
-                  <Cloud className="h-5 w-5" />
-                  <span className="font-medium">
-                    Google Drive Not Configured
-                  </span>
-                </div>
-                <p className="text-sm text-slate-500 mb-3">
-                  {driveStatus?.message}
-                </p>
-
-                {driveStatus?.setupInstructions && (
-                  <div className="bg-white p-3 rounded border text-xs text-slate-600 space-y-1">
-                    {driveStatus.setupInstructions.map((instruction, i) => (
-                      <p key={i}>{instruction}</p>
-                    ))}
+                    )}
                   </div>
-                )}
-              </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Work Queue Tab - Role-based sections */}
+            {["ACCOUNTANT", "DIRECTOR", "ADMIN"].includes(user.role) && (
+              <TabsContent value="approvals" className="space-y-6">
+                {/* Accounts Officer - Pending Review */}
+                {["ACCOUNTANT", "ADMIN"].includes(user.role) &&
+                  pendingForReview.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                          To Check ({pendingForReview.length})
+                        </CardTitle>
+                        <CardDescription>
+                          Verify these requests from staff
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {pendingForReview.map((req) => (
+                            <Card
+                              key={req.id}
+                              className="border-l-4 border-l-yellow-400"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <User className="h-4 w-4 text-slate-400" />
+                                      <span className="font-medium">
+                                        {req.user.name}
+                                      </span>
+                                      {req.user.department && (
+                                        <Badge variant="outline">
+                                          {req.user.department}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <h3 className="font-semibold">
+                                      {req.reason}
+                                    </h3>
+                                    <p className="text-sm text-slate-600 mb-2">
+                                      {req.description}
+                                    </p>
+                                    <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                                      <span className="font-semibold">
+                                        KES {req.totalAmount.toLocaleString()}
+                                      </span>
+                                      <span>
+                                        Event:{" "}
+                                        {new Date(
+                                          req.eventDate,
+                                        ).toLocaleDateString()}
+                                      </span>
+                                      <span>
+                                        Needed by:{" "}
+                                        {new Date(
+                                          req.dateNeeded,
+                                        ).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedRequisition(req);
+                                        setShowRequisitionDetail(true);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View
+                                    </Button>
+                                    {user.role === "ADMIN" && (
+                                      <Button
+                                        variant="outline"
+                                        size="sm"
+                                        onClick={() => openEditForm(req)}
+                                      >
+                                        <Edit className="h-4 w-4 mr-1" />
+                                        Edit
+                                      </Button>
+                                    )}
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 border-red-300"
+                                      onClick={() =>
+                                        handleApprove(req.id, "REJECT")
+                                      }
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      onClick={() =>
+                                        handleApprove(req.id, "CHECK")
+                                      }
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Mark as Checked
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                {/* Director - Ready for Approval */}
+                {["DIRECTOR", "ADMIN"].includes(user.role) &&
+                  pendingForApproval.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                          To Approve ({pendingForApproval.length})
+                        </CardTitle>
+                        <CardDescription>
+                          These have been checked by the accounts officer
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {pendingForApproval.map((req) => (
+                            <Card
+                              key={req.id}
+                              className="border-l-4 border-l-blue-400"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <User className="h-4 w-4 text-slate-400" />
+                                      <span className="font-medium">
+                                        {req.user.name}
+                                      </span>
+                                      {req.checkedBy && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-blue-600 border-blue-300"
+                                        >
+                                          Checked by {req.checkedBy.name}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <h3 className="font-semibold">
+                                      {req.reason}
+                                    </h3>
+                                    <p className="text-sm text-slate-600 mb-2">
+                                      {req.description}
+                                    </p>
+                                    <div className="flex flex-wrap gap-4 text-sm text-slate-500">
+                                      <span className="font-semibold">
+                                        KES {req.totalAmount.toLocaleString()}
+                                      </span>
+                                      <span>
+                                        Event:{" "}
+                                        {new Date(
+                                          req.eventDate,
+                                        ).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => {
+                                        setSelectedRequisition(req);
+                                        setShowRequisitionDetail(true);
+                                      }}
+                                    >
+                                      <Eye className="h-4 w-4 mr-1" />
+                                      View
+                                    </Button>
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      className="text-red-600 border-red-300"
+                                      onClick={() =>
+                                        handleApprove(req.id, "REJECT")
+                                      }
+                                    >
+                                      <XCircle className="h-4 w-4 mr-1" />
+                                      Reject
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-blue-600 hover:bg-blue-700"
+                                      onClick={() =>
+                                        handleApprove(req.id, "APPROVE")
+                                      }
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Approve
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                {/* Accounts Officer - Ready for Disbursement */}
+                {["ACCOUNTANT", "ADMIN"].includes(user.role) &&
+                  pendingForDisbursement.length > 0 && (
+                    <Card>
+                      <CardHeader>
+                        <CardTitle>
+                          To Send Money ({pendingForDisbursement.length})
+                        </CardTitle>
+                        <CardDescription>
+                          These requests are approved - send money and mark as
+                          disbursed
+                        </CardDescription>
+                      </CardHeader>
+                      <CardContent>
+                        <div className="space-y-4">
+                          {pendingForDisbursement.map((req) => (
+                            <Card
+                              key={req.id}
+                              className="border-l-4 border-l-green-400"
+                            >
+                              <CardContent className="p-4">
+                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
+                                  <div className="flex-1">
+                                    <div className="flex items-center gap-2 mb-2">
+                                      <User className="h-4 w-4 text-slate-400" />
+                                      <span className="font-medium">
+                                        {req.user.name}
+                                      </span>
+                                      {req.approvedBy && (
+                                        <Badge
+                                          variant="outline"
+                                          className="text-green-600 border-green-300"
+                                        >
+                                          Approved by {req.approvedBy.name}
+                                        </Badge>
+                                      )}
+                                    </div>
+                                    <h3 className="font-semibold">
+                                      {req.reason}
+                                    </h3>
+                                    <p className="text-sm text-slate-600 mb-2">
+                                      {req.description}
+                                    </p>
+                                    <div className="flex flex-wrap gap-4 text-sm">
+                                      <span className="font-bold text-green-600 text-lg">
+                                        KES {req.totalAmount.toLocaleString()}
+                                      </span>
+                                      <span className="text-slate-500">
+                                        Event:{" "}
+                                        {new Date(
+                                          req.eventDate,
+                                        ).toLocaleDateString()}
+                                      </span>
+                                    </div>
+                                  </div>
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button
+                                      variant="outline"
+                                      size="sm"
+                                      onClick={() => handleExport(req.id)}
+                                    >
+                                      <Download className="h-4 w-4 mr-1" />
+                                      Download Form
+                                    </Button>
+                                    <Button
+                                      size="sm"
+                                      className="bg-green-600 hover:bg-green-700"
+                                      onClick={() =>
+                                        handleApprove(req.id, "DISBURSE")
+                                      }
+                                    >
+                                      <CheckCircle className="h-4 w-4 mr-1" />
+                                      Mark as Sent
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+              </TabsContent>
             )}
+          </Tabs>
+        </main>
 
-            <div className="flex gap-2">
-              <a
-                href="https://drive.google.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex-1"
-              >
-                <Button variant="outline" className="w-full">
-                  <ExternalLink className="h-4 w-4 mr-2" />
-                  Open Google Drive
-                </Button>
-              </a>
-              <Button variant="outline" onClick={checkDriveStatus}>
-                Refresh Status
-              </Button>
-            </div>
+        {/* Footer */}
+        <footer className="bg-white border-t py-4 mt-auto">
+          <div className="max-w-7xl mx-auto px-4 text-center text-sm text-slate-500">
+            Youth For Christ • Money Request System © {new Date().getFullYear()}
           </div>
-        </DialogContent>
-      </Dialog>
+        </footer>
 
-      {/* New Requisition Dialog */}
-      <Dialog open={showNewRequisition} onOpenChange={setShowNewRequisition}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>New Money Request</DialogTitle>
-            <DialogDescription>
-              Fill in the details below to request funds
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleNewRequisition} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Help Dialog */}
+        <Dialog open={showHelp} onOpenChange={setShowHelp}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>How to Use This System</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
               <div>
-                <Label>What do you need money for? *</Label>
-                <Select
-                  value={newReqForm.reason}
-                  onValueChange={(v) =>
-                    setNewReqForm((prev) => ({ ...prev, reason: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {reasonOptions.map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <h4 className="font-semibold mb-1">For Staff:</h4>
+                <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
+                  <li>Click "New Request" to create a money request</li>
+                  <li>Fill in the form with details and amounts</li>
+                  <li>Wait for Accounts to check and Director to approve</li>
+                  <li>After money is sent, upload your receipt</li>
+                </ol>
               </div>
               <div>
-                <Label>Account to Charge</Label>
-                <Input
-                  placeholder="e.g., Program Fund"
-                  value={newReqForm.accountToCharge}
-                  onChange={(e) =>
-                    setNewReqForm((prev) => ({
-                      ...prev,
-                      accountToCharge: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div>
-              <Label>Explain what you need *</Label>
-              <Textarea
-                placeholder="Describe why you need this money..."
-                value={newReqForm.description}
-                onChange={(e) =>
-                  setNewReqForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                required
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Date of Event/Activity *</Label>
-                <Input
-                  type="date"
-                  value={newReqForm.eventDate}
-                  onChange={(e) =>
-                    setNewReqForm((prev) => ({
-                      ...prev,
-                      eventDate: e.target.value,
-                    }))
-                  }
-                  required
-                />
+                <h4 className="font-semibold mb-1">For Accounts Officer:</h4>
+                <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
+                  <li>Go to "Work Queue" tab</li>
+                  <li>Check each request and click "Mark as Checked"</li>
+                  <li>
+                    After Director approves, send money and click "Mark as Sent"
+                  </li>
+                  <li>Verify receipts when staff submit them</li>
+                </ol>
               </div>
               <div>
-                <Label>When do you need the money? *</Label>
-                <Input
-                  type="date"
-                  value={newReqForm.dateNeeded}
-                  onChange={(e) =>
-                    setNewReqForm((prev) => ({
-                      ...prev,
-                      dateNeeded: e.target.value,
-                    }))
-                  }
-                  required
-                />
+                <h4 className="font-semibold mb-1">For National Director:</h4>
+                <ol className="list-decimal list-inside text-sm text-slate-600 space-y-1">
+                  <li>Go to "Work Queue" tab</li>
+                  <li>Review checked requests</li>
+                  <li>Click "Approve" or "Reject" for each</li>
+                </ol>
+              </div>
+              <div className="bg-amber-50 p-3 rounded-lg">
+                <p className="text-sm text-amber-800">
+                  <strong>Important:</strong> Staff cannot create new requests
+                  until all pending receipts are uploaded after the event date.
+                </p>
+              </div>
+              <div className="bg-green-50 p-3 rounded-lg">
+                <p className="text-sm text-green-800">
+                  <strong>Partial Receipts:</strong> If a receipt is for less
+                  than the total amount, the balance remains until full amount
+                  is covered.
+                </p>
               </div>
             </div>
+          </DialogContent>
+        </Dialog>
 
-            <div>
-              <Label>Who will be involved? (Optional)</Label>
-              <Input
-                placeholder="e.g., 5 staff members, 20 youth..."
-                value={newReqForm.participants}
-                onChange={(e) =>
-                  setNewReqForm((prev) => ({
-                    ...prev,
-                    participants: e.target.value,
-                  }))
-                }
-              />
-            </div>
+        {/* Admin: Manage Users Dialog */}
+        <Dialog open={showAdminUsers} onOpenChange={setShowAdminUsers}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>
+                <div className="flex items-center gap-2">
+                  <Key className="h-5 w-5" />
+                  Manage Users
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 mt-2">
+              <div>
+                <h3 className="font-medium">Existing Users</h3>
+                <div className="mt-2 space-y-2 max-h-48 overflow-y-auto">
+                  {adminLoading ? (
+                    <p className="text-sm text-slate-500">Loading...</p>
+                  ) : adminUsers.length === 0 ? (
+                    <p className="text-sm text-slate-500">No users found.</p>
+                  ) : (
+                    adminUsers.map((u) => (
+                      <div
+                        key={u.id}
+                        className="flex items-center justify-between p-2 border rounded"
+                      >
+                        <div>
+                          <p className="font-medium">
+                            {u.name}{" "}
+                            <span className="text-xs text-slate-500">
+                              ({u.role})
+                            </span>
+                          </p>
+                          <p className="text-sm text-slate-500">{u.email}</p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              navigator.clipboard?.writeText(u.email);
+                              toast({
+                                title: "Copied",
+                                description: "Email copied to clipboard.",
+                              });
+                            }}
+                          >
+                            <Mail className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => deleteAdminUser(u.id)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
 
-            {newReqForm.reason.includes("Transport") && (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <hr />
+
+              <form onSubmit={createAdminUser} className="space-y-4">
                 <div>
-                  <Label>Distance</Label>
+                  <Label>Name</Label>
                   <Input
-                    placeholder="e.g., 50 km"
-                    value={newReqForm.transportDistance}
+                    value={newAdminForm.name}
                     onChange={(e) =>
-                      setNewReqForm((prev) => ({
-                        ...prev,
-                        transportDistance: e.target.value,
-                      }))
+                      setNewAdminForm({ ...newAdminForm, name: e.target.value })
                     }
                   />
                 </div>
                 <div>
-                  <Label>Number of Trips</Label>
+                  <Label>Email</Label>
                   <Input
-                    placeholder="e.g., 2 trips"
-                    value={newReqForm.transportQuantity}
+                    type="email"
+                    value={newAdminForm.email}
                     onChange={(e) =>
-                      setNewReqForm((prev) => ({
-                        ...prev,
-                        transportQuantity: e.target.value,
-                      }))
+                      setNewAdminForm({
+                        ...newAdminForm,
+                        email: e.target.value,
+                      })
                     }
                   />
                 </div>
-              </div>
-            )}
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Item List *</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addExpenseItem}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Item
-                </Button>
-              </div>
-              {newReqForm.expenseItems.map((item, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Item name"
-                      value={item.item}
-                      onChange={(e) =>
-                        updateExpenseItem(index, "item", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="w-32">
-                    <Input
-                      type="number"
-                      placeholder="Amount"
-                      value={item.amount}
-                      onChange={(e) =>
-                        updateExpenseItem(index, "amount", e.target.value)
-                      }
-                    />
-                  </div>
-                  {newReqForm.expenseItems.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeExpenseItem(index)}
-                      className="text-red-500"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <div className="flex justify-end">
-                <div className="bg-slate-100 px-4 py-2 rounded-lg">
-                  <span className="text-sm text-slate-600">Total: </span>
-                  <span className="font-bold text-lg">
-                    KES {calculateTotal().toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowNewRequisition(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Submit Request</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Requisition Dialog (Admin Only) */}
-      <Dialog open={showEditRequisition} onOpenChange={setShowEditRequisition}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Edit Request</DialogTitle>
-            <DialogDescription>
-              Change the details of this request
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleEdit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Reason</Label>
-                <Select
-                  value={editForm.reason}
-                  onValueChange={(v) =>
-                    setEditForm((prev) => ({ ...prev, reason: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select a reason" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {reasonOptions.map((opt) => (
-                      <SelectItem key={opt} value={opt}>
-                        {opt}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div>
-                <Label>Status</Label>
-                <Select
-                  value={editForm.status}
-                  onValueChange={(v) =>
-                    setEditForm((prev) => ({ ...prev, status: v }))
-                  }
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="PENDING">Waiting for Review</SelectItem>
-                    <SelectItem value="CHECKED">Checked</SelectItem>
-                    <SelectItem value="APPROVED">Approved</SelectItem>
-                    <SelectItem value="DISBURSED">Money Sent</SelectItem>
-                    <SelectItem value="COMPLETED">Completed</SelectItem>
-                    <SelectItem value="REJECTED">Rejected</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div>
-              <Label>Description</Label>
-              <Textarea
-                value={editForm.description}
-                onChange={(e) =>
-                  setEditForm((prev) => ({
-                    ...prev,
-                    description: e.target.value,
-                  }))
-                }
-                rows={3}
-              />
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <Label>Event Date</Label>
-                <Input
-                  type="date"
-                  value={editForm.eventDate}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      eventDate: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-              <div>
-                <Label>Date Needed</Label>
-                <Input
-                  type="date"
-                  value={editForm.dateNeeded}
-                  onChange={(e) =>
-                    setEditForm((prev) => ({
-                      ...prev,
-                      dateNeeded: e.target.value,
-                    }))
-                  }
-                />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
-                <Label>Item List</Label>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addEditExpenseItem}
-                >
-                  <Plus className="h-4 w-4 mr-1" />
-                  Add Item
-                </Button>
-              </div>
-              {editForm.expenseItems.map((item, index) => (
-                <div key={index} className="flex gap-2 items-start">
-                  <div className="flex-1">
-                    <Input
-                      placeholder="Item name"
-                      value={item.item}
-                      onChange={(e) =>
-                        updateEditExpenseItem(index, "item", e.target.value)
-                      }
-                    />
-                  </div>
-                  <div className="w-32">
-                    <Input
-                      type="number"
-                      placeholder="Amount"
-                      value={item.amount}
-                      onChange={(e) =>
-                        updateEditExpenseItem(index, "amount", e.target.value)
-                      }
-                    />
-                  </div>
-                  {editForm.expenseItems.length > 1 && (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => removeEditExpenseItem(index)}
-                      className="text-red-500"
-                    >
-                      <XCircle className="h-4 w-4" />
-                    </Button>
-                  )}
-                </div>
-              ))}
-              <div className="flex justify-end">
-                <div className="bg-slate-100 px-4 py-2 rounded-lg">
-                  <span className="text-sm text-slate-600">Total: </span>
-                  <span className="font-bold text-lg">
-                    KES {calculateEditTotal().toLocaleString()}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowEditRequisition(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit">Save Changes</Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Request?</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this request? This cannot be
-              undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setShowDeleteConfirm(false)}
-            >
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDelete}>
-              Yes, Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Receipt Upload Dialog */}
-      <Dialog open={showReceiptUpload} onOpenChange={setShowReceiptUpload}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Upload Receipt</DialogTitle>
-            <DialogDescription>
-              Upload a receipt for: {selectedRequisition?.reason}
-            </DialogDescription>
-          </DialogHeader>
-          <form onSubmit={handleUploadReceipt} className="space-y-4">
-            <div>
-              <Label>Receipt Amount (KES) *</Label>
-              <Input
-                type="number"
-                placeholder="Enter amount on this receipt"
-                value={receiptAmount}
-                onChange={(e) => setReceiptAmount(e.target.value)}
-                required
-                min="0"
-                step="0.01"
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                Remaining balance: KES{" "}
-                {selectedRequisition
-                  ? (
-                      selectedRequisition.totalAmount -
-                      (selectedRequisition.totalReceived || 0)
-                    ).toLocaleString()
-                  : "0"}
-              </p>
-            </div>
-            <div>
-              <Label>Select Receipt File *</Label>
-              <Input
-                type="file"
-                accept="image/*,.pdf"
-                onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                required
-              />
-              <p className="text-xs text-slate-500 mt-1">
-                You can upload images or PDF files
-              </p>
-            </div>
-            <div>
-              <Label>Notes (Optional)</Label>
-              <Textarea
-                placeholder="Add any notes about this receipt..."
-                value={receiptDescription}
-                onChange={(e) => setReceiptDescription(e.target.value)}
-              />
-            </div>
-            <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setShowReceiptUpload(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={!selectedFile || !receiptAmount}>
-                <Upload className="h-4 w-4 mr-2" />
-                Upload Receipt
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Requisition Detail Dialog */}
-      <Dialog
-        open={showRequisitionDetail}
-        onOpenChange={setShowRequisitionDetail}
-      >
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Request Details</DialogTitle>
-          </DialogHeader>
-          {selectedRequisition && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
                 <div>
-                  <Badge
-                    className={statusConfig[selectedRequisition.status]?.color}
+                  <Label>Password</Label>
+                  <Input
+                    type="password"
+                    value={newAdminForm.password}
+                    onChange={(e) =>
+                      setNewAdminForm({
+                        ...newAdminForm,
+                        password: e.target.value,
+                      })
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Role</Label>
+                  <Select
+                    onValueChange={(v) =>
+                      setNewAdminForm({ ...newAdminForm, role: v })
+                    }
+                    value={newAdminForm.role}
                   >
-                    {statusConfig[selectedRequisition.status]?.label}
-                  </Badge>
-                  <p className="text-sm text-slate-500 mt-1">
-                    {statusConfig[selectedRequisition.status]?.description}
-                  </p>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="STAFF">Staff</SelectItem>
+                      <SelectItem value="ACCOUNTANT">Accountant</SelectItem>
+                      <SelectItem value="DIRECTOR">Director</SelectItem>
+                      <SelectItem value="ADMIN">Admin</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => handleExport(selectedRequisition.id)}
-                >
-                  <Download className="h-4 w-4 mr-1" />
-                  Download Form
-                </Button>
-              </div>
+                <DialogFooter>
+                  <Button type="submit">Create User</Button>
+                  <Button
+                    variant="ghost"
+                    onClick={() => setShowAdminUsers(false)}
+                  >
+                    Close
+                  </Button>
+                </DialogFooter>
+              </form>
+            </div>
+          </DialogContent>
+        </Dialog>
 
-              <Separator />
+        {/* Google Drive Settings Dialog */}
+        <Dialog open={showDriveSettings} onOpenChange={setShowDriveSettings}>
+          <DialogContent className="max-w-lg">
+            <DialogHeader>
+              <DialogTitle>
+                <div className="flex items-center gap-2">
+                  <Cloud className="h-5 w-5" />
+                  Google Drive Integration
+                </div>
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4">
+              {driveStatus?.configured ? (
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 text-green-700 mb-2">
+                    <CheckCircle className="h-5 w-5" />
+                    <span className="font-medium">
+                      Connected to Google Drive
+                    </span>
+                  </div>
+                  <p className="text-sm text-green-600">
+                    {driveStatus.message}
+                  </p>
+                  <p className="text-xs text-green-500 mt-2">
+                    Your receipts will be automatically backed up to Google
+                    Drive when uploaded.
+                  </p>
+                </div>
+              ) : (
+                <div className="bg-slate-50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 text-slate-600 mb-2">
+                    <Cloud className="h-5 w-5" />
+                    <span className="font-medium">
+                      Google Drive Not Configured
+                    </span>
+                  </div>
+                  <p className="text-sm text-slate-500 mb-3">
+                    {driveStatus?.message}
+                  </p>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-slate-500">Requested By</Label>
-                  <p className="font-medium">{selectedRequisition.user.name}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Department</Label>
-                  <p className="font-medium">
-                    {selectedRequisition.user.department || "Not specified"}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Reason</Label>
-                  <p className="font-medium">{selectedRequisition.reason}</p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Total Amount</Label>
-                  <p className="font-medium text-green-600">
-                    KES {selectedRequisition.totalAmount.toLocaleString()}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Event Date</Label>
-                  <p className="font-medium">
-                    {new Date(
-                      selectedRequisition.eventDate,
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Date Needed</Label>
-                  <p className="font-medium">
-                    {new Date(
-                      selectedRequisition.dateNeeded,
-                    ).toLocaleDateString()}
-                  </p>
-                </div>
-              </div>
-
-              <div>
-                <Label className="text-sm text-slate-500">Description</Label>
-                <p className="mt-1">{selectedRequisition.description}</p>
-              </div>
-
-              {selectedRequisition.participants && (
-                <div>
-                  <Label className="text-sm text-slate-500">Participants</Label>
-                  <p className="mt-1">{selectedRequisition.participants}</p>
+                  {driveStatus?.setupInstructions && (
+                    <div className="bg-white p-3 rounded border text-xs text-slate-600 space-y-1">
+                      {driveStatus.setupInstructions.map((instruction, i) => (
+                        <p key={i}>{instruction}</p>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
 
-              <div>
-                <Label className="text-sm text-slate-500">Item List</Label>
-                <div className="mt-2 border rounded-lg overflow-hidden">
-                  <table className="w-full">
-                    <thead className="bg-slate-50">
-                      <tr>
-                        <th className="text-left p-2 text-sm">Item</th>
-                        <th className="text-right p-2 text-sm">Amount (KES)</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {(() => {
-                        try {
-                          return JSON.parse(
-                            selectedRequisition.expenseItems,
-                          ).map((item: ExpenseItem, i: number) => (
-                            <tr key={i} className="border-t">
-                              <td className="p-2">{item.item}</td>
-                              <td className="p-2 text-right">
-                                {item.amount.toLocaleString()}
-                              </td>
-                            </tr>
-                          ));
-                        } catch {
-                          return null;
-                        }
-                      })()}
-                      <tr className="border-t bg-slate-50">
-                        <td className="p-2 font-semibold">Total</td>
-                        <td className="p-2 text-right font-semibold">
-                          {selectedRequisition.totalAmount.toLocaleString()}
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
+              <div className="flex gap-2">
+                <a
+                  href="https://drive.google.com"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex-1"
+                >
+                  <Button variant="outline" className="w-full">
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    Open Google Drive
+                  </Button>
+                </a>
+                <Button variant="outline" onClick={checkDriveStatus}>
+                  Refresh Status
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* New Requisition Dialog */}
+        <Dialog open={showNewRequisition} onOpenChange={setShowNewRequisition}>
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>New Money Request</DialogTitle>
+              <DialogDescription>
+                Fill in the details below to request funds
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleNewRequisition} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>What do you need money for? *</Label>
+                  <Select
+                    value={newReqForm.reason}
+                    onValueChange={(v) =>
+                      setNewReqForm((prev) => ({ ...prev, reason: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reasonOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Account to Charge</Label>
+                  <Input
+                    placeholder="e.g., Program Fund"
+                    value={newReqForm.accountToCharge}
+                    onChange={(e) =>
+                      setNewReqForm((prev) => ({
+                        ...prev,
+                        accountToCharge: e.target.value,
+                      }))
+                    }
+                  />
                 </div>
               </div>
 
               <div>
-                <Label className="text-sm text-slate-500">
-                  Amount in Words
-                </Label>
-                <p className="mt-1 italic">
-                  {numberToWords(Math.floor(selectedRequisition.totalAmount))}{" "}
-                  Kenya Shillings
+                <Label>Explain what you need *</Label>
+                <Textarea
+                  placeholder="Describe why you need this money..."
+                  value={newReqForm.description}
+                  onChange={(e) =>
+                    setNewReqForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  required
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Date of Event/Activity *</Label>
+                  <Input
+                    type="date"
+                    value={newReqForm.eventDate}
+                    onChange={(e) =>
+                      setNewReqForm((prev) => ({
+                        ...prev,
+                        eventDate: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+                <div>
+                  <Label>When do you need the money? *</Label>
+                  <Input
+                    type="date"
+                    value={newReqForm.dateNeeded}
+                    onChange={(e) =>
+                      setNewReqForm((prev) => ({
+                        ...prev,
+                        dateNeeded: e.target.value,
+                      }))
+                    }
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <Label>Who will be involved? (Optional)</Label>
+                <Input
+                  placeholder="e.g., 5 staff members, 20 youth..."
+                  value={newReqForm.participants}
+                  onChange={(e) =>
+                    setNewReqForm((prev) => ({
+                      ...prev,
+                      participants: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              {newReqForm.reason.includes("Transport") && (
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label>Distance</Label>
+                    <Input
+                      placeholder="e.g., 50 km"
+                      value={newReqForm.transportDistance}
+                      onChange={(e) =>
+                        setNewReqForm((prev) => ({
+                          ...prev,
+                          transportDistance: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label>Number of Trips</Label>
+                    <Input
+                      placeholder="e.g., 2 trips"
+                      value={newReqForm.transportQuantity}
+                      onChange={(e) =>
+                        setNewReqForm((prev) => ({
+                          ...prev,
+                          transportQuantity: e.target.value,
+                        }))
+                      }
+                    />
+                  </div>
+                </div>
+              )}
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Item List *</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addExpenseItem}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+                {newReqForm.expenseItems.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Item name"
+                        value={item.item}
+                        onChange={(e) =>
+                          updateExpenseItem(index, "item", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="w-32">
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={item.amount}
+                        onChange={(e) =>
+                          updateExpenseItem(index, "amount", e.target.value)
+                        }
+                      />
+                    </div>
+                    {newReqForm.expenseItems.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeExpenseItem(index)}
+                        className="text-red-500"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex justify-end">
+                  <div className="bg-slate-100 px-4 py-2 rounded-lg">
+                    <span className="text-sm text-slate-600">Total: </span>
+                    <span className="font-bold text-lg">
+                      KES {calculateTotal().toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowNewRequisition(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Submit Request</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Edit Requisition Dialog (Admin Only) */}
+        <Dialog
+          open={showEditRequisition}
+          onOpenChange={setShowEditRequisition}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Edit Request</DialogTitle>
+              <DialogDescription>
+                Change the details of this request
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleEdit} className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Reason</Label>
+                  <Select
+                    value={editForm.reason}
+                    onValueChange={(v) =>
+                      setEditForm((prev) => ({ ...prev, reason: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select a reason" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {reasonOptions.map((opt) => (
+                        <SelectItem key={opt} value={opt}>
+                          {opt}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div>
+                  <Label>Status</Label>
+                  <Select
+                    value={editForm.status}
+                    onValueChange={(v) =>
+                      setEditForm((prev) => ({ ...prev, status: v }))
+                    }
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="PENDING">
+                        Waiting for Review
+                      </SelectItem>
+                      <SelectItem value="CHECKED">Checked</SelectItem>
+                      <SelectItem value="APPROVED">Approved</SelectItem>
+                      <SelectItem value="DISBURSED">Money Sent</SelectItem>
+                      <SelectItem value="COMPLETED">Completed</SelectItem>
+                      <SelectItem value="REJECTED">Rejected</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div>
+                <Label>Description</Label>
+                <Textarea
+                  value={editForm.description}
+                  onChange={(e) =>
+                    setEditForm((prev) => ({
+                      ...prev,
+                      description: e.target.value,
+                    }))
+                  }
+                  rows={3}
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <Label>Event Date</Label>
+                  <Input
+                    type="date"
+                    value={editForm.eventDate}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        eventDate: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+                <div>
+                  <Label>Date Needed</Label>
+                  <Input
+                    type="date"
+                    value={editForm.dateNeeded}
+                    onChange={(e) =>
+                      setEditForm((prev) => ({
+                        ...prev,
+                        dateNeeded: e.target.value,
+                      }))
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <Label>Item List</Label>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addEditExpenseItem}
+                  >
+                    <Plus className="h-4 w-4 mr-1" />
+                    Add Item
+                  </Button>
+                </div>
+                {editForm.expenseItems.map((item, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <Input
+                        placeholder="Item name"
+                        value={item.item}
+                        onChange={(e) =>
+                          updateEditExpenseItem(index, "item", e.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="w-32">
+                      <Input
+                        type="number"
+                        placeholder="Amount"
+                        value={item.amount}
+                        onChange={(e) =>
+                          updateEditExpenseItem(index, "amount", e.target.value)
+                        }
+                      />
+                    </div>
+                    {editForm.expenseItems.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeEditExpenseItem(index)}
+                        className="text-red-500"
+                      >
+                        <XCircle className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                <div className="flex justify-end">
+                  <div className="bg-slate-100 px-4 py-2 rounded-lg">
+                    <span className="text-sm text-slate-600">Total: </span>
+                    <span className="font-bold text-lg">
+                      KES {calculateEditTotal().toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowEditRequisition(false)}
+                >
+                  Cancel
+                </Button>
+                <Button type="submit">Save Changes</Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+
+        {/* Delete Confirmation Dialog */}
+        <Dialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Delete Request?</DialogTitle>
+              <DialogDescription>
+                Are you sure you want to delete this request? This cannot be
+                undone.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setShowDeleteConfirm(false)}
+              >
+                Cancel
+              </Button>
+              <Button variant="destructive" onClick={handleDelete}>
+                Yes, Delete
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+
+        {/* Receipt Upload Dialog */}
+        <Dialog open={showReceiptUpload} onOpenChange={setShowReceiptUpload}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Upload Receipt</DialogTitle>
+              <DialogDescription>
+                Upload a receipt for: {selectedRequisition?.reason}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={handleUploadReceipt} className="space-y-4">
+              <div>
+                <Label>Receipt Amount (KES) *</Label>
+                <Input
+                  type="number"
+                  placeholder="Enter amount on this receipt"
+                  value={receiptAmount}
+                  onChange={(e) => setReceiptAmount(e.target.value)}
+                  required
+                  min="0"
+                  step="0.01"
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  Remaining balance: KES{" "}
+                  {selectedRequisition
+                    ? (
+                        selectedRequisition.totalAmount -
+                        (selectedRequisition.totalReceived || 0)
+                      ).toLocaleString()
+                    : "0"}
                 </p>
               </div>
-
-              <Separator />
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label className="text-sm text-slate-500">Checked By</Label>
-                  <p className="font-medium">
-                    {selectedRequisition.checkedBy?.name || "Pending"}
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-sm text-slate-500">Approved By</Label>
-                  <p className="font-medium">
-                    {selectedRequisition.approvedBy?.name || "Pending"}
-                  </p>
-                </div>
+              <div>
+                <Label>Select Receipt File *</Label>
+                <Input
+                  type="file"
+                  accept="image/*,.pdf"
+                  onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
+                  required
+                />
+                <p className="text-xs text-slate-500 mt-1">
+                  You can upload images or PDF files
+                </p>
               </div>
+              <div>
+                <Label>Notes (Optional)</Label>
+                <Textarea
+                  placeholder="Add any notes about this receipt..."
+                  value={receiptDescription}
+                  onChange={(e) => setReceiptDescription(e.target.value)}
+                />
+              </div>
+              <DialogFooter>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowReceiptUpload(false)}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!selectedFile || !receiptAmount}
+                >
+                  <Upload className="h-4 w-4 mr-2" />
+                  Upload Receipt
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
 
-              {selectedRequisition.receipts &&
-                selectedRequisition.receipts.length > 0 && (
-                  <>
-                    <Separator />
-                    <div>
-                      <Label className="text-sm text-slate-500">
-                        Receipts Uploaded
-                      </Label>
-                      <div className="mt-2 space-y-2">
-                        {selectedRequisition.receipts.map((receipt) => (
-                          <div
-                            key={receipt.id}
-                            className="flex items-center gap-2 p-2 bg-green-50 rounded-lg"
-                          >
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            <div>
-                              <p className="font-medium text-sm">
-                                {receipt.fileName}
-                              </p>
-                              <p className="text-xs text-slate-500">
-                                Uploaded:{" "}
-                                {new Date(
-                                  receipt.uploadedAt,
-                                ).toLocaleDateString()}
-                              </p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  </>
+        {/* Requisition Detail Dialog */}
+        <Dialog
+          open={showRequisitionDetail}
+          onOpenChange={setShowRequisitionDetail}
+        >
+          <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Request Details</DialogTitle>
+            </DialogHeader>
+            {selectedRequisition && (
+              <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Badge
+                      className={
+                        statusConfig[selectedRequisition.status]?.color
+                      }
+                    >
+                      {statusConfig[selectedRequisition.status]?.label}
+                    </Badge>
+                    <p className="text-sm text-slate-500 mt-1">
+                      {statusConfig[selectedRequisition.status]?.description}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleExport(selectedRequisition.id)}
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Download Form
+                  </Button>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-slate-500">
+                      Requested By
+                    </Label>
+                    <p className="font-medium">
+                      {selectedRequisition.user.name}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">Department</Label>
+                    <p className="font-medium">
+                      {selectedRequisition.user.department || "Not specified"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">Reason</Label>
+                    <p className="font-medium">{selectedRequisition.reason}</p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">
+                      Total Amount
+                    </Label>
+                    <p className="font-medium text-green-600">
+                      KES {selectedRequisition.totalAmount.toLocaleString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">Event Date</Label>
+                    <p className="font-medium">
+                      {new Date(
+                        selectedRequisition.eventDate,
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">
+                      Date Needed
+                    </Label>
+                    <p className="font-medium">
+                      {new Date(
+                        selectedRequisition.dateNeeded,
+                      ).toLocaleDateString()}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm text-slate-500">Description</Label>
+                  <p className="mt-1">{selectedRequisition.description}</p>
+                </div>
+
+                {selectedRequisition.participants && (
+                  <div>
+                    <Label className="text-sm text-slate-500">
+                      Participants
+                    </Label>
+                    <p className="mt-1">{selectedRequisition.participants}</p>
+                  </div>
                 )}
-            </div>
-          )}
-        </DialogContent>
-      </Dialog>
-    </div>
-  );
+
+                <div>
+                  <Label className="text-sm text-slate-500">Item List</Label>
+                  <div className="mt-2 border rounded-lg overflow-hidden">
+                    <table className="w-full">
+                      <thead className="bg-slate-50">
+                        <tr>
+                          <th className="text-left p-2 text-sm">Item</th>
+                          <th className="text-right p-2 text-sm">
+                            Amount (KES)
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {(() => {
+                          try {
+                            return JSON.parse(
+                              selectedRequisition.expenseItems,
+                            ).map((item: ExpenseItem, i: number) => (
+                              <tr key={i} className="border-t">
+                                <td className="p-2">{item.item}</td>
+                                <td className="p-2 text-right">
+                                  {item.amount.toLocaleString()}
+                                </td>
+                              </tr>
+                            ));
+                          } catch {
+                            return null;
+                          }
+                        })()}
+                        <tr className="border-t bg-slate-50">
+                          <td className="p-2 font-semibold">Total</td>
+                          <td className="p-2 text-right font-semibold">
+                            {selectedRequisition.totalAmount.toLocaleString()}
+                          </td>
+                        </tr>
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm text-slate-500">
+                    Amount in Words
+                  </Label>
+                  <p className="mt-1 italic">
+                    {numberToWords(Math.floor(selectedRequisition.totalAmount))}{" "}
+                    Kenya Shillings
+                  </p>
+                </div>
+
+                <Separator />
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-sm text-slate-500">Checked By</Label>
+                    <p className="font-medium">
+                      {selectedRequisition.checkedBy?.name || "Pending"}
+                    </p>
+                  </div>
+                  <div>
+                    <Label className="text-sm text-slate-500">
+                      Approved By
+                    </Label>
+                    <p className="font-medium">
+                      {selectedRequisition.approvedBy?.name || "Pending"}
+                    </p>
+                  </div>
+                </div>
+
+                {selectedRequisition.receipts &&
+                  selectedRequisition.receipts.length > 0 && (
+                    <>
+                      <Separator />
+                      <div>
+                        <Label className="text-sm text-slate-500">
+                          Receipts Uploaded
+                        </Label>
+                        <div className="mt-2 space-y-2">
+                          {selectedRequisition.receipts.map((receipt) => (
+                            <div
+                              key={receipt.id}
+                              className="flex items-center gap-2 p-2 bg-green-50 rounded-lg"
+                            >
+                              <CheckCircle className="h-5 w-5 text-green-600" />
+                              <div>
+                                <p className="font-medium text-sm">
+                                  {receipt.fileName}
+                                </p>
+                                <p className="text-xs text-slate-500">
+                                  Uploaded:{" "}
+                                  {new Date(
+                                    receipt.uploadedAt,
+                                  ).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+              </div>
+            )}
+          </DialogContent>
+        </Dialog>
+      </div>
+    );
   }
 }
