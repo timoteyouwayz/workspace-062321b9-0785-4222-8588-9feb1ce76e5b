@@ -335,62 +335,16 @@ export default function NGOManagementSystem() {
           description: data.error,
           variant: "destructive",
         });
-      try {
-        const res = await fetch('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(loginForm),
-        });
-        const data = await res.json();
-        if (data.error) {
-          setLoginError(data.error);
-          toast({ title: 'Oops!', description: data.error, variant: 'destructive' });
-        } else {
-          setLoginError('');
-          setUser(data.user);
-          fetchRequisitions();
-          toast({ title: 'Welcome back!', description: `Hello, ${data.user.name}!` });
-        }
-      } catch (error) {
-        setLoginError('Could not log in. Please try again.');
-        toast({ title: 'Error', description: 'Could not log in. Please try again.', variant: 'destructive' });
-      }
-    };
-    e.preventDefault();
-    if (signupForm.password !== signupForm.confirmPassword) {
-      toast({
-        title: "Oops!",
-        description: "Passwords do not match",
-        variant: "destructive",
-      });
-      return;
-    }
-    try {
-      const res = await fetch("/api/auth/signup", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(signupForm),
-      });
-      const data = await res.json();
-      if (data.error) {
-        toast({
-          title: "Oops!",
-          description: data.error,
-          variant: "destructive",
-        });
+        setLoginError(data.error);
       } else {
+        setLoginError("");
         setUser(data.user);
-        toast({
-          title: "Welcome!",
-          description: `Your account is ready, ${data.user.name}!`,
-        });
+        fetchRequisitions();
+        toast({ title: "Welcome back!", description: `Hello, ${data.user.name}!` });
       }
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not create account. Please try again.",
-        variant: "destructive",
-      });
+      setLoginError("Could not log in. Please try again.");
+      toast({ title: "Error", description: "Could not log in. Please try again.", variant: "destructive" });
     }
   }
 
@@ -2747,4 +2701,4 @@ export default function NGOManagementSystem() {
       </Dialog>
     </div>
   );
-  }
+    // ...existing code...
