@@ -177,36 +177,37 @@ function numberToWords(num: number): string {
     "",
     "Twenty",
     "Thirty",
-    "Forty",
-    "Fifty",
-    "Sixty",
-    "Seventy",
-    "Eighty",
-    "Ninety",
-  ];
-  const teens = [
-    "Ten",
-    "Eleven",
-    "Twelve",
-    "Thirteen",
-    "Fourteen",
-    "Fifteen",
-    "Sixteen",
-    "Seventeen",
-    "Eighteen",
-    "Nineteen",
-  ];
-
-  if (num === 0) return "Zero";
-  if (num < 10) return ones[num];
-  if (num < 20) return teens[num - 10];
-  if (num < 100)
-    return tens[Math.floor(num / 10)] + (num % 10 ? "-" + ones[num % 10] : "");
-  if (num < 1000)
-    return (
-      ones[Math.floor(num / 100)] +
-      " Hundred" +
-      (num % 100 ? " and " + numberToWords(num % 100) : "")
+    // Form states
+    const [loginForm, setLoginForm] = useState({ email: '', password: '' });
+    const [loginError, setLoginError] = useState('');
+    const [signupForm, setSignupForm] = useState({ name: '', email: '', password: '', confirmPassword: '', department: '', phone: '' });
+    const [newReqForm, setNewReqForm] = useState({
+      reason: '',
+      description: '',
+      eventDate: '',
+      dateNeeded: '',
+      participants: '',
+      transportDistance: '',
+      transportQuantity: '',
+      accountToCharge: '',
+      expenseItems: [{ item: '', amount: '' }] as { item: string; amount: string }[],
+      status: '',
+    });
+    const [editForm, setEditForm] = useState({
+      reason: '',
+      description: '',
+      eventDate: '',
+      dateNeeded: '',
+      participants: '',
+      transportDistance: '',
+      transportQuantity: '',
+      accountToCharge: '',
+      expenseItems: [{ item: '', amount: '' }] as { item: string; amount: string }[],
+      status: '',
+    });
+    const [receiptDescription, setReceiptDescription] = useState('');
+    const [receiptAmount, setReceiptAmount] = useState('');
+    const [selectedFile, setSelectedFile] = useState<File | null>(null);
     );
   if (num < 1000000)
     return (
@@ -342,24 +343,27 @@ export default function NGOManagementSystem() {
           description: data.error,
           variant: "destructive",
         });
-      } else {
-        setUser(data.user);
-        fetchRequisitions();
-        toast({
-          title: "Welcome back!",
-          description: `Hello, ${data.user.name}!`,
+      try {
+        const res = await fetch('/api/auth/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(loginForm),
         });
+        const data = await res.json();
+        if (data.error) {
+          setLoginError(data.error);
+          toast({ title: 'Oops!', description: data.error, variant: 'destructive' });
+        } else {
+          setLoginError('');
+          setUser(data.user);
+          fetchRequisitions();
+          toast({ title: 'Welcome back!', description: `Hello, ${data.user.name}!` });
+        }
+      } catch (error) {
+        setLoginError('Could not log in. Please try again.');
+        toast({ title: 'Error', description: 'Could not log in. Please try again.', variant: 'destructive' });
       }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "Could not log in. Please try again.",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleSignup = async (e: React.FormEvent) => {
+    };
     e.preventDefault();
     if (signupForm.password !== signupForm.confirmPassword) {
       toast({
