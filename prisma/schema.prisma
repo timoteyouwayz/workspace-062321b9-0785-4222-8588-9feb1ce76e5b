@@ -8,7 +8,7 @@ generator client {
 // Database configuration
 // For production: MySQL (mysql://user:password@host:port/dbname)
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 

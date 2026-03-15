@@ -1,20 +1,26 @@
+// Plain JS seed script for SQLite
 const { PrismaClient } = require("@prisma/client");
-const { createHash } = require("crypto");
+const crypto = require("crypto");
 
-const prisma = new PrismaClient();
+const db = new PrismaClient();
 
 function hashPassword(password) {
-  return createHash("sha256")
+  return crypto
+    .createHash("sha256")
     .update(password + "ngo-salt-2024")
     .digest("hex");
 }
 
 async function main() {
-  console.log("Seeding users...");
+  console.log("Creating organization accounts...\n");
 
-  await prisma.user.upsert({
+  // Admin - helpdesk@kenyayfc.org - Can do ANYTHING
+  const admin = await db.user.upsert({
     where: { email: "helpdesk@kenyayfc.org" },
-    update: { password: hashPassword("admin2024"), role: "ADMIN" },
+    update: {
+      password: hashPassword("admin2024"),
+      role: "ADMIN",
+    },
     create: {
       email: "helpdesk@kenyayfc.org",
       name: "System Administrator",
@@ -23,10 +29,18 @@ async function main() {
       department: "IT",
     },
   });
+  console.log("✓ Admin account created:");
+  console.log("  Email: helpdesk@kenyayfc.org");
+  console.log("  Password: admin2024");
+  console.log("  Role: ADMIN (Full access)\n");
 
-  await prisma.user.upsert({
+  // National Director - shem@kenyayfc.org - Can APPROVE only
+  const director = await db.user.upsert({
     where: { email: "shem@kenyayfc.org" },
-    update: { password: hashPassword("director2024"), role: "DIRECTOR" },
+    update: {
+      password: hashPassword("director2024"),
+      role: "DIRECTOR",
+    },
     create: {
       email: "shem@kenyayfc.org",
       name: "Shem - National Director",
@@ -35,10 +49,18 @@ async function main() {
       department: "National Office",
     },
   });
+  console.log("✓ National Director account created:");
+  console.log("  Email: shem@kenyayfc.org");
+  console.log("  Password: director2024");
+  console.log("  Role: DIRECTOR (Can approve requisitions)\n");
 
-  await prisma.user.upsert({
+  // Accounts Officer - accounts@kenyayfc.org - Can CHECK, DISBURSE, verify receipts
+  const accountant = await db.user.upsert({
     where: { email: "accounts@kenyayfc.org" },
-    update: { password: hashPassword("accounts2024"), role: "ACCOUNTANT" },
+    update: {
+      password: hashPassword("accounts2024"),
+      role: "ACCOUNTANT",
+    },
     create: {
       email: "accounts@kenyayfc.org",
       name: "Accounts Officer",
@@ -47,10 +69,18 @@ async function main() {
       department: "Finance",
     },
   });
+  console.log("✓ Accounts Officer account created:");
+  console.log("  Email: accounts@kenyayfc.org");
+  console.log("  Password: accounts2024");
+  console.log("  Role: ACCOUNTANT (Can check, disburse, verify receipts)\n");
 
-  await prisma.user.upsert({
+  // Demo staff account
+  const staff = await db.user.upsert({
     where: { email: "staff@kenyayfc.org" },
-    update: { password: hashPassword("staff2024"), role: "STAFF" },
+    update: {
+      password: hashPassword("staff2024"),
+      role: "STAFF",
+    },
     create: {
       email: "staff@kenyayfc.org",
       name: "Staff Member",
@@ -59,16 +89,21 @@ async function main() {
       department: "Programs",
     },
   });
+  console.log("✓ Demo Staff account created:");
+  console.log("  Email: staff@kenyayfc.org");
+  console.log("  Password: staff2024");
+  console.log("  Role: STAFF (Can create requisitions)\n");
 
-  console.log("Seeding complete.");
+  console.log("=".repeat(50));
+  console.log("ALL ACCOUNTS READY FOR PRODUCTION");
+  console.log("=".repeat(50));
 }
 
 main()
+  .then(() => {
+    process.exit(0);
+  })
   .catch((e) => {
     console.error(e);
     process.exit(1);
-  })
-  .finally(async () => {
-    await prisma.$disconnect();
-    process.exit(0);
   });
