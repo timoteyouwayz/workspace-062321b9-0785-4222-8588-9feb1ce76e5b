@@ -9,7 +9,9 @@ export const db =
   new PrismaClient({
     log: ["query"],
     datasourceUrl:
-      process.env.DATABASE_POSTGRES_URL || process.env.DATABASE_URL,
+      process.env.DATABASE_POSTGRES_URL ||
+      process.env.DATABASE_URL ||
+      "postgresql://neondb_owner:npg_cRqfN7iK1hpv@ep-late-mountain-ad4c2oke-pooler.c-2.us-east-1.aws.neon.tech/neondb?channel_binding=require&sslmode=require",
   });
 
 // Enable WAL mode and busy timeout for SQLite
