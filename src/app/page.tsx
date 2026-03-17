@@ -1111,6 +1111,10 @@ export default function NGOManagementSystem() {
       </div>
     );
 
+    if (!user) {
+      return <div>Loading...</div>;
+    }
+
     // Main dashboard
     const myRequisitions = requisitions.filter((r) => r.userId === user.id);
     const pendingForReview = requisitions.filter((r) => r.status === "PENDING");
@@ -1145,7 +1149,9 @@ export default function NGOManagementSystem() {
                   size="sm"
                   onClick={() => setShowDriveSettings(true)}
                   className={
-                    driveStatus.configured ? "text-green-600" : "text-slate-400"
+                    driveStatus?.configured
+                      ? "text-green-600"
+                      : "text-slate-400"
                   }
                 >
                   <Cloud className="h-4 w-4 mr-1" />
@@ -2571,19 +2577,22 @@ export default function NGOManagementSystem() {
                   <div>
                     <Badge
                       className={
-                        statusConfig[selectedRequisition.status]?.color
+                        statusConfig[selectedRequisition?.status]?.color
                       }
                     >
-                      {statusConfig[selectedRequisition.status]?.label}
+                      {statusConfig[selectedRequisition?.status]?.label}
                     </Badge>
                     <p className="text-sm text-slate-500 mt-1">
-                      {statusConfig[selectedRequisition.status]?.description}
+                      {statusConfig[selectedRequisition?.status]?.description}
                     </p>
                   </div>
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => handleExport(selectedRequisition.id)}
+                    onClick={() =>
+                      selectedRequisition &&
+                      handleExport(selectedRequisition.id)
+                    }
                   >
                     <Download className="h-4 w-4 mr-1" />
                     Download Form
@@ -2598,33 +2607,39 @@ export default function NGOManagementSystem() {
                       Requested By
                     </Label>
                     <p className="font-medium">
-                      {selectedRequisition.user.name}
+                      {selectedRequisition?.user?.name || "Unknown"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm text-slate-500">Department</Label>
                     <p className="font-medium">
-                      {selectedRequisition.user.department || "Not specified"}
+                      {selectedRequisition?.user?.department || "Not specified"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm text-slate-500">Reason</Label>
-                    <p className="font-medium">{selectedRequisition.reason}</p>
+                    <p className="font-medium">
+                      {selectedRequisition?.reason || "N/A"}
+                    </p>
                   </div>
                   <div>
                     <Label className="text-sm text-slate-500">
                       Total Amount
                     </Label>
                     <p className="font-medium text-green-600">
-                      KES {selectedRequisition.totalAmount.toLocaleString()}
+                      KES{" "}
+                      {selectedRequisition?.totalAmount?.toLocaleString() ||
+                        "0"}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm text-slate-500">Event Date</Label>
                     <p className="font-medium">
-                      {new Date(
-                        selectedRequisition.eventDate,
-                      ).toLocaleDateString()}
+                      {selectedRequisition?.eventDate
+                        ? new Date(
+                            selectedRequisition.eventDate,
+                          ).toLocaleDateString()
+                        : "Not specified"}
                     </p>
                   </div>
                   <div>
@@ -2632,19 +2647,24 @@ export default function NGOManagementSystem() {
                       Date Needed
                     </Label>
                     <p className="font-medium">
-                      {new Date(
-                        selectedRequisition.dateNeeded,
-                      ).toLocaleDateString()}
+                      {selectedRequisition?.dateNeeded
+                        ? new Date(
+                            selectedRequisition.dateNeeded,
+                          ).toLocaleDateString()
+                        : "Not specified"}
                     </p>
                   </div>
                 </div>
 
                 <div>
                   <Label className="text-sm text-slate-500">Description</Label>
-                  <p className="mt-1">{selectedRequisition.description}</p>
+                  <p className="mt-1">
+                    {selectedRequisition?.description ||
+                      "No description provided"}
+                  </p>
                 </div>
 
-                {selectedRequisition.participants && (
+                {selectedRequisition?.participants && (
                   <div>
                     <Label className="text-sm text-slate-500">
                       Participants
@@ -2669,7 +2689,7 @@ export default function NGOManagementSystem() {
                         {(() => {
                           try {
                             return JSON.parse(
-                              selectedRequisition.expenseItems,
+                              selectedRequisition?.expenseItems || "[]",
                             ).map((item: ExpenseItem, i: number) => (
                               <tr key={i} className="border-t">
                                 <td className="p-2">{item.item}</td>
@@ -2685,7 +2705,8 @@ export default function NGOManagementSystem() {
                         <tr className="border-t bg-slate-50">
                           <td className="p-2 font-semibold">Total</td>
                           <td className="p-2 text-right font-semibold">
-                            {selectedRequisition.totalAmount.toLocaleString()}
+                            {selectedRequisition?.totalAmount?.toLocaleString() ||
+                              "0"}
                           </td>
                         </tr>
                       </tbody>
@@ -2698,7 +2719,11 @@ export default function NGOManagementSystem() {
                     Amount in Words
                   </Label>
                   <p className="mt-1 italic">
-                    {numberToWords(Math.floor(selectedRequisition.totalAmount))}{" "}
+                    {selectedRequisition?.totalAmount
+                      ? numberToWords(
+                          Math.floor(selectedRequisition.totalAmount),
+                        )
+                      : "Zero"}{" "}
                     Kenya Shillings
                   </p>
                 </div>
@@ -2709,7 +2734,7 @@ export default function NGOManagementSystem() {
                   <div>
                     <Label className="text-sm text-slate-500">Checked By</Label>
                     <p className="font-medium">
-                      {selectedRequisition.checkedBy?.name || "Pending"}
+                      {selectedRequisition?.checkedBy?.name || "Pending"}
                     </p>
                   </div>
                   <div>
@@ -2717,12 +2742,12 @@ export default function NGOManagementSystem() {
                       Approved By
                     </Label>
                     <p className="font-medium">
-                      {selectedRequisition.approvedBy?.name || "Pending"}
+                      {selectedRequisition?.approvedBy?.name || "Pending"}
                     </p>
                   </div>
                 </div>
 
-                {selectedRequisition.receipts &&
+                {selectedRequisition?.receipts &&
                   selectedRequisition.receipts.length > 0 && (
                     <>
                       <Separator />
@@ -2731,7 +2756,7 @@ export default function NGOManagementSystem() {
                           Receipts Uploaded
                         </Label>
                         <div className="mt-2 space-y-2">
-                          {selectedRequisition.receipts.map((receipt) => (
+                          {selectedRequisition?.receipts?.map((receipt) => (
                             <div
                               key={receipt.id}
                               className="flex items-center gap-2 p-2 bg-green-50 rounded-lg"

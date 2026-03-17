@@ -6,9 +6,9 @@ generator client {
 }
 
 // Database configuration
-// For production: MySQL (mysql://user:password@host:port/dbname)
+// For production: PostgreSQL (recommended)
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

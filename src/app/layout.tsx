@@ -14,24 +14,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
-  icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
-  },
+  title: "Youth For Christ - Money Request System",
+  description:
+    "NGO Management System for Youth For Christ Kenya - Efficient requisition and expense tracking",
+  keywords: [
+    "Youth For Christ",
+    "NGO",
+    "Money Request",
+    "Requisition System",
+    "Kenya",
+  ],
+  authors: [{ name: "Youth For Christ Kenya" }],
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Youth For Christ - Money Request System",
+    description:
+      "Efficient requisition and expense tracking for Youth For Christ Kenya",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Youth For Christ - Money Request System",
+    description:
+      "Efficient requisition and expense tracking for Youth For Christ Kenya",
   },
 };
 

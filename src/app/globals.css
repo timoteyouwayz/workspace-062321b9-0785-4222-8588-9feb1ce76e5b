@@ -50,4 +50,17 @@
   body {
     @apply bg-background text-foreground font-sans;
   }
+
+  /* Fix for login page layout */
+  html,
+  body {
+    height: 100%;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Ensure proper centering */
+  .min-h-screen {
+    min-height: 100vh;
+  }
 }
