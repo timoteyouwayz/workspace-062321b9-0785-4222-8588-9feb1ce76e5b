@@ -9,7 +9,6 @@ generator client {
 // For production: PostgreSQL (recommended)
 datasource db {
   provider = "postgresql"
-  url      = env("DATABASE_URL")
 }
 
 // User roles: STAFF, ACCOUNTANT, DIRECTOR, ADMIN
