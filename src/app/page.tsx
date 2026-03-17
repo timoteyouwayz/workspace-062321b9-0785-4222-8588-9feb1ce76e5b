@@ -1155,7 +1155,7 @@ export default function NGOManagementSystem() {
                   }
                 >
                   <Cloud className="h-4 w-4 mr-1" />
-                  {driveStatus.configured ? "Drive Connected" : "Drive Setup"}
+                  {driveStatus?.configured ? "Drive Connected" : "Drive Setup"}
                 </Button>
               )}
               <Button
