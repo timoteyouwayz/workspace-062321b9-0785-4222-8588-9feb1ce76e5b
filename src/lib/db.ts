@@ -8,6 +8,11 @@ export const db =
   globalForPrisma.prisma ??
   new PrismaClient({
     log: ["query"],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_POSTGRES_URL,
+      },
+    },
   });
 
 // Enable WAL mode and busy timeout for SQLite
